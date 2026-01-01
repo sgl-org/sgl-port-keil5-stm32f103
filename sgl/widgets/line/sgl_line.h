@@ -54,26 +54,59 @@ sgl_obj_t* sgl_line_create(sgl_obj_t* parent);
 
 
 /**
- * @brief set line object style
+ * @brief set line color
  * @param obj line object
- * @param type style type
- * @param value style value
+ * @param color line color
+ * @return none
  */
-void sgl_line_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value);
-
+static inline void sgl_line_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_line_t *line = (sgl_line_t*)obj;
+    line->desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
 
 /**
- * @brief get line object style
+ * @brief set line alpha
  * @param obj line object
- * @param type style type
- * @return style value
+ * @param alpha line alpha
+ * @return none
  */
-size_t sgl_line_get_style(sgl_obj_t *obj, sgl_style_type_t type);
+static inline void sgl_line_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_line_t *line = (sgl_line_t*)obj;
+    line->desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
 
+/**
+ * @brief set line start position
+ * @param obj line object
+ * @param x start x position
+ * @param y start y position
+ * @return none
+ */
+void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
-void sgl_line_set_start_point(sgl_obj_t *obj, int16_t x, int16_t y);
-void sgl_line_set_end_point(sgl_obj_t *obj, int16_t x, int16_t y);
-void sgl_line_set_width(sgl_obj_t *obj, uint16_t width);
+/**
+ * @brief set line width
+ * @param obj line object
+ * @param width line width
+ * @return none
+ */
+static inline void sgl_line_set_width(sgl_obj_t *obj, uint8_t width)
+{
+	SGL_ASSERT(obj != NULL);
+	sgl_line_t *line = (sgl_line_t*)obj;
+	line->desc.width = width << 1;
+
+	obj->coords.x1 = line->desc.start.x - width;
+	obj->coords.y1 = line->desc.start.y - width;
+	obj->coords.x2 = line->desc.end.x + width;
+	obj->coords.y2 = line->desc.end.y + width;
+	sgl_obj_set_dirty(obj);
+}
 
 
 #endif // !__SGL_LINE_H__

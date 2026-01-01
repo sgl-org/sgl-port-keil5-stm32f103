@@ -37,7 +37,6 @@
 typedef struct sgl_dropdown_option {
     struct sgl_dropdown_option *next;
     const char *text;
-    const sgl_icon_pixmap_t *icon;
 } sgl_dropdown_option_t;
 
 
@@ -46,17 +45,18 @@ typedef struct sgl_dropdown_option {
  * @desc: text description
  */
 typedef struct sgl_dropdown {
-    sgl_obj_t       obj;
-    sgl_draw_rect_t body_desc;
-    const sgl_font_t *font;
-    sgl_color_t     text_color;
+    sgl_obj_t             obj;
+    sgl_draw_rect_t       body_desc;
+    const sgl_font_t      *font;
+    sgl_color_t           text_color;
     sgl_dropdown_option_t *head;
-    int32_t         option_num;
-    int32_t         selected;
-    int16_t         option_h;
-    int16_t         expand_h;
+    uint16_t              option_num;
+    int16_t               selected;
+    int16_t               option_h;
+    int16_t               expand_h;
     sgl_dropdown_option_t *expend_start;
-    bool            is_open;
+    uint8_t               clicked;
+    bool                  is_open;
 }sgl_dropdown_t;
 
 
@@ -67,26 +67,160 @@ typedef struct sgl_dropdown {
  */
 sgl_obj_t* sgl_dropdown_create(sgl_obj_t* parent);
 
+/**
+ * @brief set dropdown object's color
+ * @param obj dropdown object
+ * @param color color
+ */
+static inline void sgl_dropdown_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->body_desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
 
 /**
- * @brief set the style of the dropdown object
- * @param obj pointer to the dropdown object
- * @param type style type
- * @param value style value
+ * @brief set dropdown object's border width
+ * @param obj dropdown object
+ * @param width border width
+ */
+static inline void sgl_dropdown_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->body_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's border color
+ * @param obj dropdown object
+ * @param color border color
+ */
+static inline void sgl_dropdown_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->body_desc.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's radius
+ * @param obj dropdown object
+ * @param radius radius
+ */
+static inline void sgl_dropdown_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->body_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's pixmap
+ * @param obj dropdown object
+ * @param pixmap pixmap
+ */
+static inline void sgl_dropdown_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->body_desc.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's alpha
+ * @param obj dropdown object
+ * @param alpha alpha
+ */
+static inline void sgl_dropdown_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->body_desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's text color
+ * @param obj dropdown object
+ * @param color text color
+ */
+static inline void sgl_dropdown_set_text_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->text_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's text font
+ * @param obj dropdown object
+ * @param font text font
+ * @return none
+ * @note font must be initialized
+ */
+static inline void sgl_dropdown_set_text_font(sgl_obj_t *obj, const sgl_font_t* font)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    dropdown->font = font;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set dropdown object's selected index
+ * @param obj dropdown object
+ * @param index selected index
  * @return none
  */
-void sgl_dropdown_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value);
-
+static inline void sgl_dropdown_set_selected_index(sgl_obj_t *obj, int index)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    SGL_ASSERT(obj != NULL && index >= 0 && index < dropdown->option_num);
+    dropdown->selected = index;
+    sgl_obj_set_dirty(obj);
+}
 
 /**
- * @brief get the style of the dropdown object
- * @param obj pointer to the dropdown object
- * @param type style type
- * @return style value
+ * @brief get dropdown object's selected index
+ * @param obj dropdown object
+ * @return selected index
  */
-size_t sgl_dropdown_get_style(sgl_obj_t *obj, sgl_style_type_t type);
+static inline int sgl_dropdown_get_selected_index(sgl_obj_t *obj)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    return dropdown->selected;
+}
 
+/**
+ * @brief get dropdown object's selected text
+ * @param obj dropdown object
+ * @return selected text
+ */
+const char *sgl_dropdown_get_selected_text(sgl_obj_t *obj);
 
-void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pixmap_t *icon);
+/**
+ * @brief add an option to the dropdown
+ * @param obj pointer to the dropdown object
+ * @param text pointer to the text
+ * @return none
+ */
+void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text);
+
+/**
+ * @brief delete an option from the dropdown
+ * @param obj pointer to the dropdown object
+ * @param text pointer to the text
+ * @return none
+ */
+void sgl_dropdown_delete_option_by_text(sgl_obj_t *obj, const char *text);
+
+/**
+ * @brief delete an option from the dropdown
+ * @param obj pointer to the dropdown object
+ * @param index index of the option
+ * @return none
+ */
+void sgl_dropdown_delete_option_by_index(sgl_obj_t *obj, int index);
+
 
 #endif // !__SGL_DROPDOWN_H__

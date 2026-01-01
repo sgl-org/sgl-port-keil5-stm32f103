@@ -41,7 +41,7 @@
 */
 void sgl_log(const char *level, const char * format, ...)
 {
-    char buffer[256];
+    char buffer[200];
     int  tail = 0;
     int  pref_size = strlen(level);
 
@@ -49,7 +49,7 @@ void sgl_log(const char *level, const char * format, ...)
 
     va_list va;
     va_start(va, format);
-    vsnprintf(buffer + pref_size, sizeof(buffer), format, va);
+    sgl_vsnprintf(buffer + pref_size, sizeof(buffer), format, va);
     va_end(va);
 
     tail = strlen(buffer);

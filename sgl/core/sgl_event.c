@@ -31,31 +31,34 @@
 
 
 /* define event queue size */
-#define SGL_EVENT_QUEUE_SIZE  CONFIG_SGL_EVENT_QUEUE_SIZE
+#define SGL_EVENT_QUEUE_SIZE          (CONFIG_SGL_EVENT_QUEUE_SIZE)
+#define SGL_EVENT_QUEUE_SIZE_MASK     (SGL_EVENT_QUEUE_SIZE - 1)
+
+/**
+ * @brief event queue struct
+ * @buffer: event buffer to save all event data
+ * @head: event queue head which is used to push event
+ * @tail: event queue tail which is used to pop event
+ * @count: event queue count which have been pushed
+ */
+typedef struct event_queue {
+    sgl_event_t buffer[SGL_EVENT_QUEUE_SIZE];
+    uint16_t    head;
+    uint16_t    tail;
+} event_queue_t;
 
 
 /**
- * @brief event lost object
- * @note this object is used to recode event lost object
+ * @brief event context struct
+ * @last_click: last click object which may be lost event
+ * @last_touch: last touch position
+ * @evtq: event queue
  */
-static struct sgl_obj *event_lost = NULL;
-
-static sgl_event_pos_t touch_atc_pos[2] = {
-    {-1, -1}, {-1, -1},
-};
-
-
-static struct event_queue {
-    sgl_event_t* buffer;
-    uint16_t capacity;
-    uint16_t head;
-    uint16_t tail;
-    uint16_t size;
-} evtq;
-
-
-/* define event queue buffer  */
-static sgl_event_t evtq_buffer[SGL_EVENT_QUEUE_SIZE] = {0};
+static struct event_context {
+    struct sgl_obj *last_click;
+    sgl_event_pos_t last_touch;
+    event_queue_t   evtq;
+} evt_ctx;
 
 
 /**
@@ -71,10 +74,7 @@ int sgl_event_queue_init(void)
         return -1;
     }
 
-    evtq.buffer = evtq_buffer;
-    evtq.capacity = SGL_EVENT_QUEUE_SIZE;
-    evtq.head = evtq.tail = evtq.size = 0;
-
+    evt_ctx.evtq.head = evt_ctx.evtq.tail = 0;
     return 0;
 }
 
@@ -86,7 +86,19 @@ int sgl_event_queue_init(void)
  */
 static inline bool sgl_event_queue_is_empty(void)
 {
-    return evtq.size == 0;
+    return evt_ctx.evtq.head == evt_ctx.evtq.tail;
+}
+
+
+/**
+ * @brief Check whether the event queue is full
+ * @param none
+ * @return true if the event queue is full, false otherwise
+ */
+static inline bool sgl_event_queue_is_full(void)
+{
+    uint32_t next_head = (evt_ctx.evtq.head + 1) & SGL_EVENT_QUEUE_SIZE_MASK;
+    return next_head == evt_ctx.evtq.tail;
 }
 
 
@@ -97,14 +109,13 @@ static inline bool sgl_event_queue_is_empty(void)
  */
 void sgl_event_queue_push(sgl_event_t event)
 {
-    if (unlikely( evtq.size == evtq.capacity )) {
+    if (unlikely(sgl_event_queue_is_full())) {
         SGL_LOG_ERROR("Event queue is full, maybe system is too slow");
-        evtq.head = evtq.tail = evtq.size = 0;
+        return;
     }
 
-    evtq.buffer[evtq.tail] = event;
-    evtq.tail = ((evtq.tail + 1) & (evtq.capacity - 1));
-    evtq.size++;
+    evt_ctx.evtq.buffer[evt_ctx.evtq.head] = event;
+    evt_ctx.evtq.head = ((evt_ctx.evtq.head + 1) & SGL_EVENT_QUEUE_SIZE_MASK);
 }
 
 
@@ -119,10 +130,8 @@ static inline int sgl_event_queue_pop(sgl_event_t* out_event)
         return -1;
     }
 
-    *out_event = evtq.buffer[evtq.head];
-    evtq.head = ((evtq.head + 1) & (evtq.capacity - 1));
-    evtq.size--;
-
+    *out_event = evt_ctx.evtq.buffer[evt_ctx.evtq.tail];
+    evt_ctx.evtq.tail = ((evt_ctx.evtq.tail + 1) & SGL_EVENT_QUEUE_SIZE_MASK);
     return 0;
 }
 
@@ -193,9 +202,12 @@ static struct sgl_obj* click_detect_object(sgl_event_pos_t *pos)
     while (top > 0) {
         SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
 		obj = stack[--top];
-
         if (sgl_obj_has_sibling(obj)) {
             stack[top++] = obj->sibling;
+        }
+
+        if (unlikely(sgl_obj_is_hidden(obj))) {
+            continue;
         }
 
         if (pos_is_focus_on_obj(pos, &obj->coords, obj->radius)) {
@@ -219,39 +231,6 @@ static struct sgl_obj* click_detect_object(sgl_event_pos_t *pos)
 
 
 /**
- * @brief check whether the position is motion on the object
- * @param pos The position to be motion
- * @return The object that is motion on, NULL if no object is motion
- */
-static struct sgl_obj* motion_detect_object(sgl_event_pos_t *pos)
-{
-    struct sgl_obj *stack[SGL_OBJ_DEPTH_MAX], *obj = NULL;
-    int top = 0;
-    stack[top++] = sgl_screen_act();
-
-    while (top > 0) {
-        SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
-
-        if (sgl_obj_has_sibling(obj)) {
-            stack[top++] = obj->sibling;
-        }
-
-        if (pos_is_focus_on_obj(pos, &obj->coords, obj->radius)) {
-            if (sgl_obj_is_movable(obj)) {
-                return obj;
-            }
-            else if (sgl_obj_has_child(obj)) {
-                stack[top++] = obj->child;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-
-/**
  * @brief Handle the position event
  * @param pos The position to be handled
  * @param type The type of the event
@@ -266,11 +245,7 @@ void sgl_event_send_pos(sgl_event_pos_t pos, sgl_event_type_t type)
     };
 
     if (type == SGL_EVENT_PRESSED) {
-        touch_atc_pos[1] = pos;
-    }
-    else if (type == SGL_EVENT_MOTION) {
-        touch_atc_pos[0] = touch_atc_pos[1];
-        touch_atc_pos[1] = pos;
+        evt_ctx.last_touch = pos;
     }
 
     sgl_event_queue_push(event);
@@ -284,8 +259,8 @@ void sgl_event_send_pos(sgl_event_pos_t pos, sgl_event_type_t type)
  */
 static void sgl_get_move_info(sgl_event_t *evt)
 {
-    int16_t dx = touch_atc_pos[1].x - touch_atc_pos[0].x;
-    int16_t dy = touch_atc_pos[1].y - touch_atc_pos[0].y;
+    int16_t dx = evt->pos.x - evt_ctx.last_touch.x;
+    int16_t dy = evt->pos.y - evt_ctx.last_touch.y;
 
     if (sgl_abs(dx) > sgl_abs(dy)) {
         if (dx > 0) {
@@ -307,6 +282,8 @@ static void sgl_get_move_info(sgl_event_t *evt)
             evt->distance = -dy;
         }
     }
+
+    evt_ctx.last_touch = evt->pos;
 }
 
 
@@ -322,76 +299,104 @@ void sgl_event_task(void)
     sgl_event_t evt;
     struct sgl_obj *obj = NULL;
 
-    /* get event from event queue */
+    /* Get event from event queue */
     while (sgl_event_queue_pop(&evt) == 0) {
+        obj = evt.obj;
 
-        if (evt.obj == NULL) {
-            /* if event type is not motion, use pos to detect object */
+        /* if obj is NULL, it means the event from the input device */
+        if (obj == NULL) {
             if (evt.type != SGL_EVENT_MOTION) {
                 obj = click_detect_object(&evt.pos);
-            }
-            else {
-                obj = motion_detect_object(&evt.pos);
+            } else {
+                obj = evt_ctx.last_click;
                 sgl_get_move_info(&evt);
             }
         }
-        else {
-            /* if obj is not NULL, means obj is set by user */
-            obj = evt.obj;
-        }
 
         if (obj) {
-            /* set obj to event */
-            evt.obj = obj;
+            evt.pos.x = sgl_clamp(evt.pos.x, obj->coords.x1, obj->coords.x2);
+            evt.pos.y = sgl_clamp(evt.pos.y, obj->coords.y1, obj->coords.y2);
 
-            /* if type is PRESSED, means obj is clicked */
             if (evt.type == SGL_EVENT_PRESSED) {
-                if (obj->pressed == false) {
-                    /* set obj pressed to true */
-                    obj->pressed = true;
-                    /* update event lost object */
-                    event_lost = obj;
-                }
-                else {
-                    /* if obj is clicked, skip this event */
+                if (obj->pressed) {
                     continue;
                 }
+                obj->pressed = true;
+                evt_ctx.last_click = obj;
             }
             else if (evt.type == SGL_EVENT_RELEASED) {
-                /* if obj is pressed, set obj pressed to false */
-                if (obj->pressed) {
-                    obj->pressed = false;
-                    /* clear event lost */
-                    event_lost = NULL;
-                }
-                else {
-                    /* if event lost is not current, means error occurred, push the event into queue again */
-                    if (event_lost && event_lost != obj) {
-                        evt.obj = event_lost;
+                if (!obj->pressed) {
+                    if (evt_ctx.last_click && evt_ctx.last_click != obj) {
+                        evt.obj = evt_ctx.last_click;
                         sgl_event_queue_push(evt);
                     }
                     continue;
                 }
-            }
-            else if (evt.type == SGL_EVENT_MOTION && (!sgl_obj_is_movable(obj))) {
-                continue;
+                obj->pressed = false;
+                evt_ctx.last_click = NULL;
             }
 
-            /* call the event function */
-            if (obj->construct_fn) {
-                sgl_obj_set_dirty(obj);
-                evt.param = obj->event_data;
-                obj->construct_fn(NULL, obj, &evt);
-            }
+            SGL_ASSERT(obj->construct_fn);
+            sgl_obj_set_dirty(obj);
+            evt.param = obj->event_data;
+            obj->construct_fn(NULL, obj, &evt);
         }
         else {
-            SGL_LOG_TRACE("pos is out of object, skip event");
-            /* if the event is released, check if the event is lost */
-            if (evt.type == SGL_EVENT_RELEASED && event_lost != obj) {
-                /* if the event is lost, set the event to the lost object and push it to the event queue again */
-                evt.obj = event_lost;
+            SGL_LOG_TRACE("pos is out of object or no event_lost, skip event");
+            if (evt.type == SGL_EVENT_RELEASED && evt_ctx.last_click != NULL) {
+                evt.obj = evt_ctx.last_click;
                 sgl_event_queue_push(evt);
             }
+        }
+    }
+}
+
+
+/**
+ * @brief Touch event read, this function will be called by user
+ * @param x: touch x position
+ * @param y: touch y position
+ * @param flag: touch flag, it means touch event down or up:
+ *              true : touch down
+ *              false: touch up
+ * @return none
+ * @note: for example, you can call it in 30ms tick handler function
+ *        void example_30ms_tick_handler(void)
+ *        {
+ *            int pos_x, pos_y;
+ *            bool button_status;
+ * 
+ *            bsp_touch_read_pos(&pos_x, &pos_y);
+ *            button_status = bsp_touch_read_status();
+ *            
+ *            sgl_event_read_pos_polling(pos_x, pos_y, button_status);
+ *        }
+ */
+void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
+{
+    static sgl_event_pos_t last_pos;
+    static bool pressed_flag = false;
+    sgl_event_pos_t pos = { .x = x, .y = y };
+
+    if (flag) {
+        if (!pressed_flag) {
+            pressed_flag = true;
+            sgl_event_send_pos(pos, SGL_EVENT_PRESSED);
+            SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", x, y);
+        }
+        else {
+            if (last_pos.x != x || last_pos.y != y) {
+                sgl_event_send_pos(pos, SGL_EVENT_MOTION);
+                last_pos = pos;
+                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", x, y);
+            }
+        }
+    }
+    else {
+        if (pressed_flag) {
+            pressed_flag = false;
+            sgl_event_send_pos(pos, SGL_EVENT_RELEASED);
+            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", x, y);
         }
     }
 }

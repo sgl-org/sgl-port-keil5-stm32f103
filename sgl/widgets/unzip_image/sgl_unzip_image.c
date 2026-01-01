@@ -61,8 +61,8 @@ static void sgl_unzip_img_dec_init(sgl_unzip_img_dec_t *dec, const sgl_unzip_img
     dec->x = 0;
     dec->y = 0;
     dec->rep_cnt = 0;
-    dec->out.full = 0;
-    dec->unzip.full = 0;
+    dec->out = sgl_int2color(0);
+    dec->unzip = sgl_int2color(0);
     dec->p = unzip_img->map;
 }
 
@@ -76,20 +76,20 @@ static void sgl_unzip_img_incremental(sgl_unzip_img_dec_t *dec)
         dec->rep_cnt = 1;
         if (dec->p[dec->n] & 0x20) {
             sgl_color_t dat16;
-            dat16.full = dec->p[dec->n] | (dec->p[dec->n + 1] << 8);
-            if (dec->unzip.full == dat16.full) {
+            dat16 = sgl_int2color(dec->p[dec->n] | (dec->p[dec->n + 1] << 8));
+            if (sgl_color2int(dec->unzip) == sgl_color2int(dat16)) {
                 dec->n += 2;
                 dec->rep_cnt = (dec->p[dec->n] << 8) | dec->p[dec->n + 1];
             } else {
-                dec->unzip.full = dat16.full;
-                dec->out.full = dat16.full;
+                dec->unzip = dat16;
+                dec->out = dat16;
             }
             dec->n += 2;
         } else {
             uint8_t b = dec->p[dec->n];
             uint16_t r = (b << 5) & 0x1800;
             uint16_t g = (b << 3) & 0x00e3;
-            dec->out.full = dec->unzip.full ^ (r + g + (b & 0x03));
+            dec->out =  sgl_int2color((sgl_color2int(dec->unzip) ^ (r + g + (b & 0x03))));
             dec->n++;
         }
     }
@@ -111,6 +111,8 @@ static void sgl_draw_unzip_img_with_alpha(sgl_surf_t *surf, int16_t xs, int16_t 
     SGL_ASSERT(surf != NULL);
     SGL_ASSERT(unzip_img != NULL);
     
+    SGL_UNUSED(color);
+
     sgl_area_t img_rect;
     img_rect.x1 = xs;
     img_rect.y1 = ys;
@@ -125,7 +127,7 @@ static void sgl_draw_unzip_img_with_alpha(sgl_surf_t *surf, int16_t xs, int16_t 
     sgl_unzip_img_dec_t dec;
     sgl_unzip_img_dec_init(&dec, unzip_img);
     
-    int16_t xe = xs + unzip_img->width - 1;
+    // int16_t xe = xs + unzip_img->width - 1;
     int16_t ye = ys + unzip_img->height - 1;
     
     while (dec.y <= ye && dec.y <= intersection.y2) {
@@ -137,7 +139,7 @@ static void sgl_draw_unzip_img_with_alpha(sgl_surf_t *surf, int16_t xs, int16_t 
             
             if (x >= intersection.x1 && x <= intersection.x2 && 
                 y >= intersection.y1 && y <= intersection.y2) {
-                sgl_color_t *buf = sgl_surf_get_buf(surf, x - surf->x, y - surf->y);
+                sgl_color_t *buf = sgl_surf_get_buf(surf, x - surf->x1, y - surf->y1);
                 *buf = sgl_color_mixer(dec.out, *buf, alpha);
                 // For monochrome images, can be used to change image color
                 // if (buf != NULL) {
@@ -171,7 +173,9 @@ void sgl_draw_unzip_img(sgl_surf_t *surf, sgl_rect_t *area, sgl_rect_t *coords, 
     SGL_ASSERT(surf != NULL);
     SGL_ASSERT(desc != NULL);
     SGL_ASSERT(desc->unzip_img != NULL);
-    
+
+    SGL_UNUSED(area);
+
     int16_t xs = coords->x1;
     int16_t ys = coords->y1;
     
@@ -182,103 +186,6 @@ void sgl_draw_unzip_img(sgl_surf_t *surf, sgl_rect_t *area, sgl_rect_t *coords, 
     }
 }
 
-/**
- * @brief Set compressed image style
- * @param obj Object pointer
- * @param type Style type
- * @param value Style value
- */
-void sgl_unzip_img_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value)
-{
-    sgl_unzip_img_t *unzip_img = (sgl_unzip_img_t*)obj;
-
-    switch((int)type) {
-    case SGL_STYLE_POS_X:
-        sgl_obj_set_pos_x(obj, value);
-        break;
-
-    case SGL_STYLE_POS_Y:
-        sgl_obj_set_pos_y(obj, value);
-        break;
-    
-    case SGL_STYLE_SIZE_W:
-        sgl_obj_set_width(obj, value);
-        break;
-    
-    case SGL_STYLE_SIZE_H:
-        sgl_obj_set_height(obj, value);
-        break;
-
-    case SGL_STYLE_COLOR:
-        unzip_img->desc.color = sgl_int2color(value);
-        break;
-    
-    case SGL_STYLE_ALPHA:
-        unzip_img->desc.alpha = value;
-        break;
-    
-    case SGL_STYLE_PIXMAP:
-        unzip_img->desc.unzip_img = (const sgl_unzip_img_pixmap_t*)value;
-        if (unzip_img->desc.unzip_img != NULL) {
-            sgl_obj_set_width(obj, unzip_img->desc.unzip_img->width);
-            sgl_obj_set_height(obj, unzip_img->desc.unzip_img->height);
-        }
-        break;
-
-    case SGL_STYLE_ALIGN:
-        unzip_img->desc.align = value;
-        break;
-
-    default:
-        SGL_LOG_WARN("sgl_unzip_img_set_style: unsupported style type %d", type);
-        break;
-    }
-
-    sgl_obj_set_dirty(obj);
-}
-
-/**
- * @brief Get compressed image style
- * @param obj Object pointer
- * @param type Style type
- * @return Style value
- */
-size_t sgl_unzip_img_get_style(sgl_obj_t *obj, sgl_style_type_t type)
-{
-    sgl_unzip_img_t *unzip_img = (sgl_unzip_img_t*)obj;
-
-    switch((int)type) {
-    case SGL_STYLE_POS_X:
-        return sgl_obj_get_pos_x(obj);
-
-    case SGL_STYLE_POS_Y:
-        return sgl_obj_get_pos_y(obj);
-    
-    case SGL_STYLE_SIZE_W:
-        return sgl_obj_get_width(obj);
-    
-    case SGL_STYLE_SIZE_H:
-        return sgl_obj_get_height(obj);
-
-    case SGL_STYLE_COLOR:
-        return sgl_color2int(unzip_img->desc.color);
-
-    case SGL_STYLE_ALPHA:
-        return unzip_img->desc.alpha;
-
-    case SGL_STYLE_PIXMAP:
-        return (size_t)unzip_img->desc.unzip_img;
-
-    case SGL_STYLE_ALIGN:
-        return unzip_img->desc.align;
-
-    default:
-        SGL_LOG_WARN("sgl_unzip_img_get_style: unsupported style type %d", type);
-        break;
-    }
-
-    return SGL_STYLE_FAILED;
-}
 
 /**
  * @brief Compressed image construction callback
@@ -320,11 +227,6 @@ sgl_obj_t* sgl_unzip_img_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &unzip_img->obj;
     sgl_obj_init(obj, parent);
     obj->construct_fn = sgl_unzip_img_construct_cb;
-
-#if CONFIG_SGL_USE_STYLE_UNIFIED_API
-    obj->set_style = sgl_unzip_img_set_style;
-    obj->get_style = sgl_unzip_img_get_style;
-#endif
 
     unzip_img->desc.alpha = 255;
     unzip_img->desc.unzip_img = NULL;

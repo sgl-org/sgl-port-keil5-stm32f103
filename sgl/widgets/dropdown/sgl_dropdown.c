@@ -54,118 +54,6 @@ static const sgl_icon_pixmap_t dropdown_icon = {
 };
 
 
-/**
- * @brief set the style of the dropdown object
- * @param obj pointer to the dropdown object
- * @param type style type
- * @param value style value
- * @return none
- */
-void sgl_dropdown_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value)
-{
-    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
-
-    switch((int)type) {
-    case SGL_STYLE_POS_X:
-        sgl_obj_set_pos_x(obj, value);
-        break;
-
-    case SGL_STYLE_POS_Y:
-        sgl_obj_set_pos_y(obj, value);
-        break;
-    
-    case SGL_STYLE_SIZE_W:
-        sgl_obj_set_width(obj, value);
-        break;
-    
-    case SGL_STYLE_SIZE_H:
-        sgl_obj_set_height(obj, value);
-        break;
-
-    case SGL_STYLE_COLOR:
-        dropdown->body_desc.color = sgl_int2color(value);
-        break;
-    
-    case SGL_STYLE_ALPHA:
-        dropdown->body_desc.alpha = (uint8_t)value;
-        break;
-    
-    case SGL_STYLE_RADIUS:
-        dropdown->body_desc.radius = sgl_obj_fix_radius(obj, value);
-        break;
-
-    case SGL_STYLE_PIXMAP:
-        dropdown->body_desc.pixmap = (sgl_pixmap_t*)value;
-        break;
-
-    case SGL_STYLE_FONT:
-        dropdown->font = (sgl_font_t*)value;
-        break;
-
-    case SGL_STYLE_TEXT_COLOR:
-        dropdown->text_color = sgl_int2color(value);
-        break;
-
-    case SGL_STYLE_BORDER_WIDTH:
-        dropdown->body_desc.border = (uint8_t)value;
-        break;
-
-    case SGL_STYLE_BORDER_COLOR:
-        dropdown->body_desc.color = sgl_int2color(value);
-        break;
-
-    default:
-        SGL_LOG_WARN("sgl_dropdown_set_style: unsupported style type %d", type);
-    }
-
-    /* set dirty */
-    sgl_obj_set_dirty(obj);
-}
-
-
-/**
- * @brief get the style of the dropdown object
- * @param obj pointer to the dropdown object
- * @param type style type
- * @return style value
- */
-size_t sgl_dropdown_get_style(sgl_obj_t *obj, sgl_style_type_t type)
-{
-    //sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
-
-    switch((int)type) {
-    case SGL_STYLE_POS_X:
-        return sgl_obj_get_pos_x(obj);
-
-    case SGL_STYLE_POS_Y:
-        return sgl_obj_get_pos_y(obj);
-    
-    case SGL_STYLE_SIZE_W:
-        return sgl_obj_get_width(obj);
-    
-    case SGL_STYLE_SIZE_H:
-        return sgl_obj_get_height(obj);
-
-    default:
-        SGL_LOG_WARN("sgl_dropdown_get_style: unsupported style type %d", type);
-    }
-
-    return SGL_STYLE_FAILED;
-}
-
-
-// static void dropdown_open(sgl_dropdown_t *dropdown)
-// {
-
-// }
-
-
-// static void dropdown_close(sgl_dropdown_t *dropdown)
-// {
-
-// }
-
-
 static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
@@ -181,7 +69,7 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     };
 
     sgl_rect_t icon_area = {
-        .x1 = obj->coords.x2 - dropdown_icon.width - 2,
+        .x1 = obj->coords.x2 - dropdown_icon.width - dropdown->body_desc.radius,
         .x2 = obj->coords.x2 - 2,
         .y1 = obj->coords.y1,
         .y2 = obj->coords.y2,
@@ -198,7 +86,12 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
 
     if (evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_rect(surf, &body_area, &body_area, &dropdown->body_desc);
-        sgl_draw_icon_with_alpha(surf, &icon_area, icon_area.x1, icon_y, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
+        if (dropdown->is_open) {
+            sgl_draw_icon(surf, &icon_area, icon_area.x1, icon_y + 2, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
+        }
+        else {
+            sgl_draw_icon(surf, &icon_area, icon_area.x1, icon_y, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
+        }
 
         for (int i = 0; option != NULL; i++) {
             if (i == dropdown->selected) {
@@ -208,45 +101,34 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         }
 
         if (option != NULL) {
-            pos_x = text_area.x1;
+            pos_x = text_area.x1 + dropdown->body_desc.radius;
             pos_y = obj->coords.y1 + (icon_h - dropdown->font->font_height) / 2;
-            if (option->icon != NULL) {
-                icon_y = obj->coords.y1 + (icon_h - option->icon->height) / 2;
-                sgl_draw_icon_with_alpha(surf, &text_area, pos_x, icon_y, dropdown->text_color, dropdown->body_desc.alpha, option->icon);
-                pos_x += option->icon->width + 2;
-            }
-
-            sgl_draw_string_with_alpha(surf, &text_area, pos_x, pos_y, option->text, dropdown->text_color, dropdown->body_desc.alpha, dropdown->font, 1);
+            sgl_draw_string(surf, &text_area, pos_x, pos_y, option->text, dropdown->text_color, dropdown->body_desc.alpha, dropdown->font);
         }
 
         if (dropdown->is_open) {
+            pos_y = body_area.y2;
             option = dropdown->expend_start;
             body_area.y1 = obj->coords.y1 + dropdown->option_h;
-            body_area.y2 = body_area.y1 + dropdown->expand_h;
+            body_area.y2 = body_area.y1 + dropdown->expand_h - 1;
             sgl_draw_rect(surf, &body_area, &body_area, &dropdown->body_desc);
-            pos_y += dropdown->option_h;
 
             for (int i = 0; option != NULL; i++) {
-                pos_x = text_area.x1;
-                if (option->icon != NULL) {
-                    icon_y = pos_y + (dropdown->font->font_height - option->icon->height) / 2;
-                    sgl_draw_icon_with_alpha(surf, &obj->area, pos_x, icon_y, dropdown->text_color, dropdown->body_desc.alpha, option->icon);
-                    pos_x += option->icon->width + 2;
-                }
-                sgl_draw_string_with_alpha(surf, &obj->area, pos_x, pos_y, option->text, dropdown->text_color, dropdown->body_desc.alpha, dropdown->font, 1);
+                pos_x = text_area.x1 + dropdown->body_desc.radius;
+                sgl_draw_string(surf, &obj->area, pos_x, pos_y, option->text, dropdown->text_color, dropdown->body_desc.alpha, dropdown->font);
                 option = option->next;
                 pos_y += dropdown->font->font_height;
             }
         }
     }
     else if (evt->type == SGL_EVENT_MOVE_UP) {
-        //dropdown->expend_start = dropdown->expend_start->next;
+        
     }
     else if (evt->type == SGL_EVENT_MOVE_DOWN) {
 
     }
     else if (evt->type == SGL_EVENT_PRESSED) {
-        dropdown->expand_h = dropdown->font->font_height * sgl_min(10, dropdown->option_num) + 5;
+        dropdown->expand_h = dropdown->font->font_height * sgl_min(10, dropdown->option_num);
 
         if (dropdown->is_open) {
             dropdown->is_open = false;
@@ -296,11 +178,9 @@ sgl_obj_t* sgl_dropdown_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &dropdown->obj;
     sgl_obj_init(&dropdown->obj, parent);
     obj->construct_fn = sgl_dropdown_construct_cb;
+    obj->needinit = 1;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
-#if CONFIG_SGL_USE_STYLE_UNIFIED_API
-    obj->set_style = sgl_dropdown_set_style;
-    obj->get_style = sgl_dropdown_get_style;
-#endif
     sgl_obj_set_clickable(obj);
     sgl_obj_set_movable(obj);
 
@@ -313,13 +193,38 @@ sgl_obj_t* sgl_dropdown_create(sgl_obj_t* parent)
     dropdown->head = NULL;
     dropdown->is_open = false;
 
-    dropdown->selected = 0;
+    dropdown->selected = -1;
+    dropdown->clicked = 0;
 
     return obj;
 }
 
+/**
+ * @brief get the selected text of the dropdown
+ * @param obj pointer to the dropdown object
+ * @return pointer to the selected text
+ */
+const char *sgl_dropdown_get_selected_text(sgl_obj_t *obj)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_option_t *option = dropdown->head;
 
-void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pixmap_t *icon)
+    for (int i = 0; i < dropdown->option_num; i++) {
+        if (i == dropdown->selected) {
+            return option->text;
+        }
+        option = option->next;
+    }
+    return NULL;
+}
+
+/**
+ * @brief add an option to the dropdown
+ * @param obj pointer to the dropdown object
+ * @param text pointer to the text
+ * @return none
+ */
+void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text)
 {
     sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
     sgl_dropdown_option_t *tail = dropdown->head;
@@ -345,6 +250,88 @@ void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pi
 
     dropdown->option_num ++;
     add->text = text;
-    add->icon = icon;
     add->next = NULL;
+
+    if (dropdown->selected == -1) {
+        dropdown->selected = 0;
+    }
+
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief delete an option from the dropdown
+ * @param obj pointer to the dropdown object
+ * @param text pointer to the text
+ * @return none
+ */
+void sgl_dropdown_delete_option_by_text(sgl_obj_t *obj, const char *text)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_option_t *curr = dropdown->head;
+    sgl_dropdown_option_t *temp = dropdown->head;
+    sgl_dropdown_option_t *prev = NULL;
+    int deleted_index = 0;
+
+    if (obj == NULL || text == NULL) {
+        return;
+    }
+
+    while (curr != NULL) {
+        if (curr->text && strcmp(curr->text, text) == 0) {
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (curr == NULL) {
+        return;
+    }
+
+    while (temp != curr) {
+        temp = temp->next;
+        deleted_index ++;
+    }
+
+    if (prev == NULL) {
+        dropdown->head = curr->next;
+    } else {
+        prev->next = curr->next;
+    }
+
+    sgl_free(curr);
+    dropdown->option_num--;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief delete an option from the dropdown
+ * @param obj pointer to the dropdown object
+ * @param index index of the option
+ * @return none
+ */
+void sgl_dropdown_delete_option_by_index(sgl_obj_t *obj, int index)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_option_t *curr = dropdown->head;
+    sgl_dropdown_option_t *prev = NULL;
+
+    if (obj == NULL || index < 0 || index >= dropdown->option_num) {
+        return;
+    }
+
+    for (int i = 0; i < index; i++) {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (prev == NULL) {
+        dropdown->head = curr->next;
+    } else {
+        prev->next = curr->next;
+    }
+
+    sgl_free(curr);
+    dropdown->option_num--;
 }

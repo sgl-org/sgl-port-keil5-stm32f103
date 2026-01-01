@@ -39,6 +39,7 @@
 #include "widgets/arc/sgl_arc.h"
 #include "widgets/button/sgl_button.h"
 #include "widgets/slider/sgl_slider.h"
+#include "widgets/progress/sgl_progress.h"
 #include "widgets/label/sgl_label.h"
 #include "widgets/switch/sgl_switch.h"
 #include "widgets/msgbox/sgl_msgbox.h"
@@ -46,12 +47,16 @@
 #include "widgets/textbox/sgl_textbox.h"
 #include "widgets/checkbox/sgl_checkbox.h"
 #include "widgets/icon/sgl_icon.h"
-#include "widgets/listview/sgl_listview.h"
+// #include "widgets/listview/sgl_listview.h"
 #include "widgets/numberkbd/sgl_numberkbd.h"
 #include "widgets/keyboard/sgl_keyboard.h"
 #include "widgets/unzip_image/sgl_unzip_image.h"
 #include "widgets/led/sgl_led.h"
 #include "widgets/2dball/sgl_2dball.h"
-
+#include "widgets/scroll/sgl_scroll.h"
+#include "widgets/dropdown/sgl_dropdown.h"
+#include "widgets/scope/sgl_scope.h"
+#include "widgets/ext_img/sgl_ext_img.h"
+#include "widgets/polygon/sgl_polygon.h"
 
 #endif // __SGL_H__

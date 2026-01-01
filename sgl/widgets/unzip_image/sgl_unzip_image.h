@@ -55,7 +55,7 @@ typedef struct {
  * @brief Compressed image object
  */
 typedef struct {
-    sgl_obj_t obj;              // Base object
+    sgl_obj_t obj;                // Base object
     sgl_draw_unzip_img_t desc;    // Drawing description
 } sgl_unzip_img_t;
 
@@ -67,28 +67,58 @@ typedef struct {
 sgl_obj_t* sgl_unzip_img_create(sgl_obj_t *parent);
 
 /**
- * @brief Set compressed image style
- * @param obj Image object
- * @param type Style type
- * @param value Style value
+ * @brief Set image color
+ * @param obj Image object pointer
+ * @param color Image color
+ * @return none
  */
-void sgl_unzip_img_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value);
+static inline void sgl_unzip_img_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    img->desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
 
 /**
- * @brief Get compressed image style
- * @param obj Image object
- * @param type Style type
- * @return Style value
+ * @brief Set image alpha value
+ * @param obj Image object pointer
+ * @param alpha Image alpha value
+ * @return none
  */
-size_t sgl_unzip_img_get_style(sgl_obj_t *obj, sgl_style_type_t type);
+static inline void sgl_unzip_img_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    img->desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
 
 /**
- * @brief Draw compressed image
- * @param surf Drawing surface
- * @param area Clipping area
- * @param coords Coordinate area
- * @param desc Drawing description
+ * @brief Set image alignment type
+ * @param obj Image object pointer
+ * @param align Image alignment type
+ * @return none
  */
-void sgl_draw_unzip_img(sgl_surf_t *surf, sgl_rect_t *area, sgl_rect_t *coords, sgl_draw_unzip_img_t *desc);
+static inline void sgl_unzip_img_set_align(sgl_obj_t *obj, sgl_align_type_t align)
+{
+    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    img->desc.align = align;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief Set image compressed image data
+ * @param obj Image object pointer
+ * @param unzip_img Compressed image data
+ * @return none
+ */
+static inline void sgl_unzip_img_set_img(sgl_obj_t *obj, const sgl_unzip_img_pixmap_t *unzip_img)
+{
+    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    img->desc.unzip_img = unzip_img;
+    if (img->desc.unzip_img != NULL) {
+        sgl_obj_set_size(obj, img->desc.unzip_img->width, img->desc.unzip_img->height);
+    }
+    sgl_obj_set_dirty(obj);
+}
 
 #endif /* __SGL_UNZIP_IMAGE_H__ */

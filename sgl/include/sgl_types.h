@@ -74,6 +74,8 @@ extern "C" {
 #define SGL_POS_MIN                             (-8192)
 #define SGL_RADIUS_INVALID                      (0xFFF)
 
+#define SGL_AREA_MAX                            {.x1 = SGL_POS_MIN, .y1 = SGL_POS_MIN, .x2 = SGL_POS_MAX, .y2 = SGL_POS_MAX}
+#define SGL_AREA_INVALID                        {.x1 = SGL_POS_MAX, .y1 = SGL_POS_MAX, .x2 = SGL_POS_MIN, .y2 = SGL_POS_MIN}
 
 #define SGL_WIDTH_INVALID                       (-1)
 #define SGL_WIDTH_MAX                           (8192)
@@ -97,34 +99,71 @@ extern "C" {
 #define SGL_STYLE_INVALID                       (UINT32_MAX)
 
 
-#define SGL_COLOR_RGB233                        (8)
+#define SGL_COLOR_RGB332                        (8)
 #define SGL_COLOR_RGB565                        (16)
 #define SGL_COLOR_RGB888                        (24)
 #define SGL_COLOR_ARGB8888                      (32)
 
+/* the pixmap format */
+#define  SGL_PIXMAP_FMT_NONE                    (0)
+#define  SGL_PIXMAP_FMT_RGB332                  (1)
+#define  SGL_PIXMAP_FMT_RGB565                  (2)
+#define  SGL_PIXMAP_FMT_RGB888                  (3)
+#define  SGL_PIXMAP_FMT_RLE_RGB332              (4)
+#define  SGL_PIXMAP_FMT_RLE_RGB565              (5)
+#define  SGL_PIXMAP_FMT_RLE_RGB888              (6)
+#define  SGL_PIXMAP_FMT_RLE_RGBA8888            (7)
+#define  SGL_PIXMAP_FMT_RLE_1                   (8)
+#define  SGL_PIXMAP_FMT_MAX                     (9)
+
 
 #ifdef __GNUC__            /* gcc compiler   */
-#define likely(x)                               __builtin_expect(!!(x), 1)
-#define unlikely(x)                             __builtin_expect(!!(x), 0)
+#ifndef likely
+#  define likely(x)                             __builtin_expect(!!(x), 1)
+#  define unlikely(x)                           __builtin_expect(!!(x), 0)
+#endif
+#define sgl_weak_fn                             __attribute__((weak))
+#define sgl_section(sec)                        __attribute__((section(#sec)))
 #elif defined(__clang__)   /* clang compiler */
-#define likely(x)                               __builtin_expect(!!(x), 1)
-#define unlikely(x)                             __builtin_expect(!!(x), 0)
+#ifndef likely
+#  define likely(x)                             __builtin_expect(!!(x), 1)
+#  define unlikely(x)                           __builtin_expect(!!(x), 0)
+#endif
+#define sgl_weak_fn                             __attribute__((weak))
+#define sgl_section(sec)                        __attribute__((section(#sec)))
 #elif defined(__CC_ARM)    /* RealView compiler (Keil ARMCC) */
-#define likely(x)                               __builtin_expect(!!(x), 1)
-#define unlikely(x)                             __builtin_expect(!!(x), 0)
+#ifndef likely
+#  define likely(x)                             __builtin_expect(!!(x), 1)
+#  define unlikely(x)                           __builtin_expect(!!(x), 0)
+#endif
+#define sgl_weak_fn                             __weak
+#define sgl_section(sec)                        __attribute__((section(#sec)))
 #elif defined(__ICCARM__)  /* IAR compiler    */
-#define likely(x)                               __iar_builtin_expect(!!(x), 1)
-#define unlikely(x)                             __iar_builtin_expect(!!(x), 0)
+#ifndef likely
+#  define likely(x)                             __iar_builtin_expect(!!(x), 1)
+#  define unlikely(x)                           __iar_builtin_expect(!!(x), 0)
+#endif
+#define sgl_weak_fn                             __weak
+#define sgl_section(sec)                        __section(#sec)
 #elif defined(_MSC_VER)    /* MSVC compiler   */
-// NOTICE: MSVC is not support  __builtin_expect！
-#define likely(x)                               (x)
-#define unlikely(x)                             (x)
+#ifndef likely
+#  define likely(x)                             (x)
+#  define unlikely(x)                           (x)
+#endif
+#define sgl_weak_fn                             __declspec(selectany)
 #elif defined(__MINGW32__) /* MinGW compiler  */
-#define likely(x)                               __builtin_expect(!!(x), 1)
-#define unlikely(x)                             __builtin_expect(!!(x), 0)
+#ifndef likely
+#  define likely(x)                             __builtin_expect(!!(x), 1)
+#  define unlikely(x)                           __builtin_expect(!!(x), 0)
+#endif
+#define sgl_weak_fn                             __attribute__((weak))
+#define sgl_section(sec)                        __attribute__((section(#sec)))
 #else                      /* others compiler */
-#define likely(x)                               (x)
-#define unlikely(x)                             (x)
+#ifndef likely
+#  define likely(x)                             (x)
+#  define unlikely(x)                           (x)
+#endif
+#warning "Weak linkage not supported for this compiler"                    
 #endif
 
 
@@ -147,17 +186,54 @@ extern "C" {
 
 // prototype: sgl_rgb(uint8_t r, uint8_t g, uint8_t b)
 #if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_ARGB8888 || CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB888)
-#define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b),              \
-                                                               .ch.green   = (g),              \
+#define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b),                                     \
+                                                               .ch.green   = (g),                                     \
                                                                .ch.red     = (r),}
+
+#define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = ((((rgb332) >> 0) & 0x03) << 6),         \
+                                                               .ch.green   = ((((rgb332) >> 2) & 0x07) << 5),         \
+                                                               .ch.red     = ((((rgb332) >> 5) & 0x07) << 6),}
+                                                            
+#define sgl_rgb565_to_color(rgb565)             (sgl_color_t){ .ch.blue    = ((((rgb565) >> 0) & 0x1F) << 3),         \
+                                                               .ch.green   = ((((rgb565) >> 5) & 0x3F) << 2),         \
+                                                               .ch.red     = ((((rgb565) >> 11) & 0x1F) << 3),}
+
+#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = (((rgb888) >> 0) & 0xFF),                \
+                                                               .ch.green   = (((rgb888) >> 8) & 0xFF),                \
+                                                               .ch.red     = (((rgb888) >> 16) & 0xFF),}
+
 #elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
-#define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b) >> 3,         \
-                                                               .ch.green   = (g) >> 2,         \
+#define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b) >> 3,                                \
+                                                               .ch.green   = (g) >> 2,                                \
                                                                .ch.red     = (r) >> 3,}
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB233)
-#define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b >> 6),         \
-                                                               .ch.green   = (g >> 5),         \
+
+#define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = ((((rgb332) >> 0) & 0x03) << 3),         \
+                                                               .ch.green   = ((((rgb332) >> 2) & 0x07) << 3),         \
+                                                               .ch.red     = ((((rgb332) >> 5) & 0x07) << 2),}
+
+#define sgl_rgb565_to_color(rgb565)             (sgl_color_t){ .ch.blue    = ((rgb565) >> 0) & 0x1F,                  \
+                                                               .ch.green   = ((rgb565) >> 5) & 0x3F,                  \
+                                                               .ch.red     = ((rgb565) >> 11) & 0x1F,}
+
+#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = ((((rgb888) >> 0) & 0xFF) >> 3),         \
+                                                               .ch.green   = ((((rgb888) >> 8) & 0xFF) >> 2),         \
+                                                               .ch.red     = ((((rgb888) >> 16) & 0xFF) >> 3),}
+#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
+#define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b >> 6),                                \
+                                                               .ch.green   = (g >> 5),                                \
                                                                .ch.red     = (r >> 5),}
+
+#define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = (((rgb332) >> 0) & 0x03),                \
+                                                               .ch.green   = (((rgb332) >> 3) & 0x07),                \
+                                                               .ch.red     = (((rgb332) >> 5) & 0x07),}
+
+#define sgl_rgb565_to_color(rgb565)             (sgl_color_t){ .ch.blue    = ((((rgb565) >> 0) & 0x1F) >> 3),         \
+                                                               .ch.green   = ((((rgb565) >> 5) & 0x3F) >> 3),         \
+                                                               .ch.red     = ((((rgb565) >> 11) & 0x1F) >> 2),}
+
+#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = ((((rgb888) >> 0) & 0xFF) >> 6),         \
+                                                               .ch.green   = ((((rgb888) >> 8) & 0xFF) >> 5),         \
+                                                               .ch.red     = ((((rgb888) >> 16) & 0xFF) >> 6),}
 #endif
 
 

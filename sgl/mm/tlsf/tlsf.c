@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <sgl_log.h>
 #include <string.h>
+#include <sgl_cfgfix.h>
 #include "tlsf.h"
 
 

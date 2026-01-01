@@ -102,7 +102,7 @@ void delay(int x)
 
 /*#################################相关宏定义，需用户修改######################################*/
 #define    TIM2_TIME_PSC           720     //定义预分频值为7200，即时钟为72000000/7200=10000即10kHz
-#define    TIM2_TIME_ARR           300     //定义计数值为1000，即定时时间为1000/10000=0.1s
+#define    TIM2_TIME_ARR           200     //定义计数值为1000，即定时时间为1000/10000=0.1s
 
 void TIM2_Init(void)
 {
@@ -133,7 +133,7 @@ const sgl_pixmap_t test_pixmap = {
 void TIM2_IRQHandler(void)
 {
    TIM2->SR&=~(1<<0);
-   sgl_anim_tick_inc(1);
+   sgl_tick_inc(1);
 }
 
 
@@ -163,8 +163,8 @@ int main(void)
         .xres_virtual = PANEL_WIDTH,
         .yres_virtual = PANEL_HEIGHT,
         .flush_area = demo_panel_flush_area,
-        .framebuffer = panel_buffer,
-        .framebuffer_size = SGL_ARRAY_SIZE(panel_buffer),
+        .buffer[0] = panel_buffer,
+        .buffer_size = SGL_ARRAY_SIZE(panel_buffer),
     };
 
     sgl_device_fb_register(&fb_dev);
@@ -182,42 +182,26 @@ int main(void)
 
     sgl_boot_animation();
 
-    sgl_obj_t *obj = NULL;
+    sgl_obj_t *rect = NULL;
     uint32_t count = 0;
     sgl_anim_t *anim = 0;
     sgl_obj_t *label = NULL;
 
-    sgl_obj_t *rect = sgl_rect_create(NULL);
-    sgl_obj_set_size(rect, 240, 40);
-    sgl_obj_set_pos_align(rect, SGL_ALIGN_TOP_MID);
-
-    sgl_obj_t *keybd = sgl_keyboard_create(NULL);
-    sgl_obj_set_size(keybd, 240, 120);
-    sgl_obj_set_font(keybd, &song23);
-    sgl_obj_set_pos_align(keybd, SGL_ALIGN_BOT_MID);
 
     while (1) {
         sgl_task_handle();
-        SGL_LOG_INFO("DEMO START %d", sizeof(sgl_keyboard_t));
         count ++;
-        if(count > 20) {
+        if(count > 2000) {
             count = 0;
             int x = sgl_rand() % 240;
-            obj = sgl_rect_create(NULL);
-            sgl_obj_set_pos(obj, x, 0);
-            sgl_obj_set_size(obj, 59, 59);
-            sgl_obj_set_border_width(obj, 0);
-            sgl_obj_set_color(obj, sgl_rgb(sgl_rand() % 255, sgl_rand() % 255, sgl_rand() % 255));
-            sgl_obj_set_radius(obj, 10);
-            sgl_obj_set_pixmap(obj, &test_pixmap);
-
-            label = sgl_label_create(obj);
-            sgl_obj_set_font(label, &song23);
-            sgl_obj_set_color(label, SGL_COLOR_BLACK);
-            sgl_obj_set_text(label, "SGL");
+            rect = sgl_rect_create(NULL);
+            sgl_obj_set_pos(rect, x, 0);
+            sgl_obj_set_size(rect, 59, 59);
+            sgl_rect_set_radius(rect, 10);
+            sgl_rect_set_pixmap(rect, &test_pixmap);
 
             anim = sgl_anim_create();
-            sgl_anim_set_data(anim, obj);
+            sgl_anim_set_data(anim, rect);
             sgl_anim_set_act_duration(anim, 1000);
             sgl_anim_set_start_value(anim, 0);
             sgl_anim_set_end_value(anim, 240);

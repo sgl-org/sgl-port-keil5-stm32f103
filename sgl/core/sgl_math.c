@@ -114,7 +114,7 @@ static const uint8_t sqrt_error_table[] = {
 /**
  * the table will used to calculate the square root of a number
  */
-static const uint32_t sqrt_error_init_table[32] = {
+static const uint8_t sqrt_error_init_table[32] = {
     0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5,
     5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7
 };

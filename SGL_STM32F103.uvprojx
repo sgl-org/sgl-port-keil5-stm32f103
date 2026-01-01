@@ -415,11 +415,6 @@
               <FilePath>.\sgl\draw\sgl_draw_arc.c</FilePath>
             </File>
             <File>
-              <FileName>sgl_draw_bar.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sgl\draw\sgl_draw_bar.c</FilePath>
-            </File>
-            <File>
               <FileName>sgl_draw_circle.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\sgl\draw\sgl_draw_circle.c</FilePath>
@@ -433,11 +428,6 @@
               <FileName>sgl_draw_line.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\sgl\draw\sgl_draw_line.c</FilePath>
-            </File>
-            <File>
-              <FileName>sgl_draw_pie.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sgl\draw\sgl_draw_pie.c</FilePath>
             </File>
             <File>
               <FileName>sgl_draw_rect.c</FileName>
@@ -458,11 +448,6 @@
               <FileName>sgl_ascii_consolas23.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\sgl\fonts\sgl_ascii_consolas23.c</FilePath>
-            </File>
-            <File>
-              <FileName>sgl_ascii_kai33.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sgl\fonts\sgl_ascii_kai33.c</FilePath>
             </File>
             <File>
               <FileName>sgl_ascii_song23.c</FileName>
@@ -515,11 +500,6 @@
               <FilePath>.\sgl\widgets\line\sgl_line.c</FilePath>
             </File>
             <File>
-              <FileName>sgl_listview.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sgl\widgets\listview\sgl_listview.c</FilePath>
-            </File>
-            <File>
               <FileName>sgl_msgbox.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\sgl\widgets\msgbox\sgl_msgbox.c</FilePath>
@@ -563,6 +543,11 @@
               <FileName>sgl_misc.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\sgl\core\sgl_misc.c</FilePath>
+            </File>
+            <File>
+              <FileName>sgl_snprintf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\sgl\core\sgl_snprintf.c</FilePath>
             </File>
           </Files>
         </Group>

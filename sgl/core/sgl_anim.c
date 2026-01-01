@@ -35,7 +35,6 @@ sgl_anim_ctx_t anim_ctx = {
     .anim_list_head = NULL,
     .anim_list_tail = NULL,
     .anim_cnt = 0,
-    .tick_ms = 0,
 };
 
 
@@ -98,6 +97,7 @@ void sgl_anim_add(sgl_anim_t *anim)
         anim_ctx.anim_list_tail = anim;
     }
 
+    anim->next = NULL;
     anim_ctx.anim_cnt++;
 }
 
@@ -156,12 +156,8 @@ void sgl_anim_task(void)
         return;
     }
 
-    if (anim_ctx.tick_ms < SGL_ANIMATION_TICK_MS) {
-        return;
-    }
-
     while (anim != NULL) {
-        anim->act_time += anim_ctx.tick_ms;
+        anim->act_time += sgl_tick_get();
 
         if(anim->act_time < anim->act_delay) {
             continue;
@@ -204,9 +200,6 @@ void sgl_anim_task(void)
 
         anim = anim->next;
     }
-
-    /* reset tick ms */
-    anim_ctx.tick_ms = 0;
 }
 
 
@@ -228,9 +221,9 @@ void sgl_anim_task(void)
  *                  Uses 32-bit integer arithmetic to avoid floating-point operations
  *                  for better performance on embedded systems
  */
-int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int16_t start, int16_t end)
+int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
 {
-    uint64_t progress_fixed, delta, result;
+    int64_t progress_fixed, delta, result;
 
     // If duration is zero or elapsed time exceeds duration, return end value
     if (duration == 0 || elaps >= duration) {
@@ -244,14 +237,14 @@ int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int16_t start, i
 
     // Calculate progress (elaps / duration) as a fixed-point number with 16 fractional bits
     // Use 64-bit intermediate to prevent overflow during multiplication
-    progress_fixed = ((uint64_t)elaps << 16) / duration;
+    progress_fixed = ((int64_t)elaps << 16) / duration;
 
     // Calculate the difference between end and start
-    delta = (int32_t)end - (int32_t)start;
+    delta = end - start;
 
     // Compute the interpolated result: start + delta * (elaps/duration)
     // Right-shift by 16 to scale back from fixed-point representation
-    result = (int32_t)start + ((delta * (int32_t)progress_fixed) >> 16);
+    result = start + ((delta * progress_fixed) >> 16);
 
     return result;
 }
@@ -269,9 +262,9 @@ int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int16_t start, i
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int16_t start, int16_t end)
+int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
 {
-    uint32_t t_180, cos_val, delta;
+    int32_t t_180, cos_val, delta;
     if (elaps >= duration)
         return end;
     if (elaps == 0)
@@ -304,9 +297,9 @@ int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int16_t sta
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int16_t start, int16_t end)
+int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
 {
-    uint32_t angle, sin_val, delta;
+    int32_t angle, sin_val, delta;
     if (elaps >= duration)
         return end;
     if (elaps == 0)
@@ -334,9 +327,9 @@ int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int16_t start,
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int16_t start, int16_t end)
+int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
 {
-    uint32_t angle, cos_val, delta;
+    int32_t angle, cos_val, delta;
     if (elaps >= duration)
         return end;
     if (elaps == 0)

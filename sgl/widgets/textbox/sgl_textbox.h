@@ -41,11 +41,14 @@
 typedef struct sgl_textbox {
     sgl_obj_t       obj;
     sgl_draw_rect_t bg;
-    sgl_draw_text_t desc;
-    sgl_draw_rect_t scroll_bg;
-    sgl_draw_rect_t scroll_fg;
-    int32_t         text_height: 31;
-    int32_t         scroll_enable: 1;
+    const char       *text;
+    const sgl_font_t *font;
+    uint8_t          line_margin;
+    sgl_color_t      text_color;
+    int32_t          y_offset;
+    sgl_draw_rect_t  scroll;
+    uint32_t         text_height: 31;
+    uint32_t         scroll_enable: 1;
 }sgl_textbox_t;
 
 
@@ -58,22 +61,121 @@ sgl_obj_t* sgl_textbox_create(sgl_obj_t* parent);
 
 
 /**
- * @brief set the style of the textline object
- * @param obj pointer to the textline object
- * @param type style type
- * @param value style value
- * @return none
+ * @brief set text of the textbox
+ * @param obj textbox object
+ * @param text text to be set
  */
-void sgl_textline_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value);
-
+static inline void sgl_textbox_set_text(sgl_obj_t *obj, const char *text)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->text = text;
+    sgl_obj_set_dirty(obj);
+}
 
 /**
- * @brief get the style of the textline object
- * @param obj pointer to the textline object
- * @param type style type
- * @return style value
+ * @brief set text color of the textbox
+ * @param obj textbox object
+ * @param color text color to be set
+ * @return none
  */
-size_t sgl_textline_get_style(sgl_obj_t *obj, sgl_style_type_t type);
+static inline void sgl_textbox_set_text_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->text_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set text font of the textbox
+ * @param obj textbox object
+ * @param font font of text
+ * @return none
+ */
+static inline void sgl_textbox_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->font = font;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set background color of the textbox
+ * @param obj textbox object
+ * @param color background color to be set
+ * @return none
+ */
+static inline void sgl_textbox_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->bg.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set radius of the textbox
+ * @param obj textbox object
+ * @param radius radius to be set
+ * @return none
+ */
+static inline void sgl_textbox_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->bg.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set border color of the textbox
+ * @param obj textbox object
+ * @param color border color to be set
+ * @return none
+ */
+static inline void sgl_textbox_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->bg.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set border width of the textbox
+ * @param obj textbox object
+ * @param width border width to be set
+ * @return none
+ */
+static inline void sgl_textbox_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->bg.border = width;
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set textbox pixmap
+ * @param obj textbox object
+ * @param pixmap pixmap to be set
+ * @return none
+ */
+static inline void sgl_textbox_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->bg.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set textbox line margin
+ * @param obj textbox object
+ * @param margin line margin to be set
+ * @return none
+ */
+static inline void sgl_textbox_set_line_margin(sgl_obj_t *obj, uint8_t margin)
+{
+    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    textbox->line_margin = margin;
+    sgl_obj_set_dirty(obj);
+}
 
 
 #endif // !__SGL_TEXTBOX_H__

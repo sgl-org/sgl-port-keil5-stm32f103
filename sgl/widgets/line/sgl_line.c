@@ -33,108 +33,12 @@
 #include "sgl_line.h"
 
 
-/**
- * @brief set line object style
- * @param obj line object
- * @param type style type
- * @param value style value
- */
-void sgl_line_set_style(sgl_obj_t *obj, sgl_style_type_t type, size_t value)
-{
-    sgl_line_t *line = (sgl_line_t*)obj;
-
-    switch((int)type) {
-    case SGL_STYLE_POS_X:
-        sgl_obj_set_pos_x(obj, value);
-        break;
-
-    case SGL_STYLE_POS_Y:
-        sgl_obj_set_pos_y(obj, value);
-        break;
-    
-    case SGL_STYLE_SIZE_W:
-        sgl_obj_set_width(obj, value);
-        break;
-    
-    case SGL_STYLE_SIZE_H:
-        sgl_obj_set_height(obj, value);
-        break;
-
-    case SGL_STYLE_COLOR:
-        line->desc.color = sgl_int2color(value);
-        break;
-    
-    case SGL_STYLE_ALPHA:
-        line->desc.alpha = value;
-        break;
-
-    case SGL_STYLE_LINE_WIDTH:
-        line->desc.width = value;
-        break;
-
-    default:
-        SGL_LOG_WARN("sgl_line_set_style: unsupported style type %d", type);
-        break;
-    }
-
-    /* set dirty */
-    sgl_obj_set_dirty(obj);
-}
-
-
-/**
- * @brief get line object style
- * @param obj line object
- * @param type style type
- * @return style value
- */
-size_t sgl_line_get_style(sgl_obj_t *obj, sgl_style_type_t type)
-{
-    sgl_line_t *line = (sgl_line_t*)obj;
-
-    switch((int)type) {
-    case SGL_STYLE_POS_X:
-        return sgl_obj_get_pos_x(obj);
-
-    case SGL_STYLE_POS_Y:
-        return sgl_obj_get_pos_y(obj);
-    
-    case SGL_STYLE_SIZE_W:
-        return sgl_obj_get_width(obj);
-    
-    case SGL_STYLE_SIZE_H:
-        return sgl_obj_get_height(obj);
-
-    case SGL_STYLE_COLOR:
-        return sgl_color2int(line->desc.color);
-    
-    case SGL_STYLE_ALPHA:
-        return line->desc.alpha;
-
-    case SGL_STYLE_LINE_WIDTH:
-        return line->desc.width;
-
-    default:
-        SGL_LOG_WARN("sgl_line_set_style: unsupported style type %d", type);
-        break;
-    }
-
-    return SGL_STYLE_FAILED;
-}
-
-
 static void sgl_line_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_line_t *line = (sgl_line_t*)obj;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_line(surf, &obj->area, &line->desc);
-    }
-    else if(evt->type == SGL_EVENT_DRAW_INIT) {
-        obj->coords.x1 = line->desc.start.x;
-        obj->coords.y1 = line->desc.start.y;
-        obj->coords.x2 = line->desc.end.x;
-        obj->coords.y2 = line->desc.end.y;
     }
 }
 
@@ -158,11 +62,6 @@ sgl_obj_t* sgl_line_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &line->obj;
     sgl_obj_init(&line->obj, parent);
     obj->construct_fn = sgl_line_construct_cb;
-#if CONFIG_SGL_USE_STYLE_UNIFIED_API
-    obj->set_style = sgl_line_set_style;
-    obj->get_style = sgl_line_get_style;
-#endif
-    obj->needinit = 1;
 
     line->desc.color = SGL_THEME_BG_COLOR;
     line->desc.alpha = SGL_ALPHA_MAX;
@@ -172,23 +71,42 @@ sgl_obj_t* sgl_line_create(sgl_obj_t* parent)
 }
 
 
-void sgl_line_set_start_point(sgl_obj_t *obj, int16_t x, int16_t y)
+/**
+ * @brief set line start position
+ * @param obj line object
+ * @param x start x position
+ * @param y start y position
+ * @return none
+ */
+void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
-    sgl_line_t *line = (sgl_line_t*)obj;
-    line->desc.start.x = x;
-    line->desc.start.y = y;
-}
+	SGL_ASSERT(obj != NULL);
+    int16_t _x1, _y1, _x2, _y2;
+	sgl_line_t *line = (sgl_line_t*)obj;
 
-void sgl_line_set_end_point(sgl_obj_t *obj, int16_t x, int16_t y)
-{
-    sgl_line_t *line = (sgl_line_t*)obj;
-    line->desc.end.x = x;
-    line->desc.end.y = y;
-}
+	line->desc.start.x = obj->parent->coords.x1 + x1;
+	line->desc.start.y = obj->parent->coords.y1 + y1;
+	line->desc.end.x = obj->parent->coords.x1 + x2;
+	line->desc.end.y = obj->parent->coords.y1 + y2;
 
+    _x1 = line->desc.start.x;
+    _x2 = line->desc.end.x;
+    _y1 = line->desc.start.y;
+    _y2 = line->desc.end.y;
 
-void sgl_line_set_width(sgl_obj_t *obj, uint16_t width)
-{
-    sgl_line_t *line = (sgl_line_t*)obj;
-    line->desc.width = width;
+	if (_x1 > _x2) {
+		sgl_swap(&_x1, &_x2);
+	}
+	if (_y1 > _y2) {
+		sgl_swap(&_y1, &_y2);
+	}
+
+	/* default thinckness is 1 */
+	obj->coords.x1 = _x1 - 1;
+	obj->coords.y1 = _y1 - 1;
+	obj->coords.x2 = _x2 + 1;
+	obj->coords.y2 = _y2 + 1;
+	line->desc.width = 2;
+
+	sgl_obj_set_dirty(obj);
 }

@@ -26,7 +26,8 @@
 #define __SGL_MATH_H__
 
 
-#include <sgl_core.h>
+#include <sgl_types.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +43,7 @@ extern "C" {
 #define sgl_max3(a, b, c)                 (sgl_max(sgl_max((a), (b)), (c)))
 #define sgl_max4(a, b, c, d)              (sgl_max(sgl_max((a), (b)), sgl_max((c), (d))))
 
-#define sgl_clamp(min, val, max)          (sgl_max(min, (sgl_min((val), (max)))))
+#define sgl_clamp(val, min, max)          (sgl_max(min, (sgl_min((val), (max)))))
 
 #define sgl_abs(x)                        ((x) > 0 ? (x) : (- (x)))
 
@@ -51,6 +52,10 @@ extern "C" {
 #define sgl_pow4(x)                       ((x) * (x) * (x) * (x))
 
 #define sgl_is_pow2(x)                    (((x) & ((x) - 1)) == 0)
+#define sgl_is_even(x)                    (((x) & 1) == 0)
+#define sgl_is_odd(x)                     ((x) & 1)
+
+#define sgl_swap(a, b)                    do { (*a) ^= (*b); (*b) ^= (*a); (*a) ^= (*b); } while (0)
 
 
 /**

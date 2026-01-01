@@ -41,6 +41,12 @@ extern "C" {
  * CONFIG_SGL_PANEL_PIXEL_DEPTH:
  *      The pixel depth of panel, it will be used to define the color type
  *
+ * CONFIG_SGL_USE_FB_VRAM:
+ *      If you want to use full framebuffer, please define this macro to 1
+ *
+ * CONFIG_SGL_SYSTICK_MS:
+ *      The macro should be defined to the system tick ms, default: 10
+ * 
  * CONFIG_SGL_COLOR16_SWAP:
  *      Its for 16 bit color, the color will be swapped
  * 
@@ -54,27 +60,14 @@ extern "C" {
  * CONFIG_SGL_OBJ_NUM_MAX:
  *      If CONFIG_SGL_OBJ_SLOT_DYNAMIC is 0 or not defined, you should define CONFIG_SGL_OBJ_NUM_MAX macro
  * 
- * CONFIG_SGL_DRAW_USE_DMA:
- *      If you want to use DMA to draw, please define this macro to 1
- * 
  * CONFIG_SGL_ANIMATION:
  *      If you want to use animation, please define this macro to 1
- * 
- * CONFIG_SGL_ANIMATION_TICK_MS:
- *      If the CONFIG_SGL_ANIMATION is 1, you should define CONFIG_SGL_ANIMATION_TICK_MS macro, and it means 
- *      the animation tick ms, default: 5
  * 
  * CONFIG_SGL_DEBUG:
  *      If you want to use debug, please define this macro to 1
  * 
- * CONFIG_SGL_TEXT_UTF8:
- *      If you want to use text utf8, please define this macro to 1
- * 
  * CONFIG_SGL_USE_OBJ_ID:
  *      If you want to use obj id, please define this macro to 1, at mostly, the CONFIG_SGL_USE_OBJ_ID should be 0
- * 
- * CONFIG_SGL_USE_STYLE_UNIFIED_API:
- *      If you want to use style unified api, please define this macro to 1, default: 1
  * 
  * CONFIG_SGL_HEAP_ALGO:
  *      The heap algorithm, default: lwmem
@@ -82,19 +75,27 @@ extern "C" {
  * CONFIG_SGL_HEAP_MEMORY_SIZE:
  *      The heap memory size, default: 10240
  * 
+ * CONFIG_SGL_FONT_COMPRESSED:
+ *      If you want to use font compressed, please define this macro to 1
+ * 
  * CONFIG_SGL_FONT_SONG23:
  *      If you want to use font song23, please define this macro to 1
  * 
  * CONFIG_SGL_FONT_CONSOLAS23:
  *      If you want to use font consolas23, please define this macro to 1
  * 
- * CONFIG_SGL_FONT_KAI33:
- *      If you want to use font kai33, please define this macro to 1
- * 
  */
 
 #ifndef CONFIG_SGL_PANEL_PIXEL_DEPTH
 #define CONFIG_SGL_PANEL_PIXEL_DEPTH                               (16)
+#endif
+
+#ifndef CONFIG_SGL_USE_FB_VRAM
+#define CONFIG_SGL_USE_FB_VRAM                                     (0)
+#endif
+
+#ifndef CONFIG_SGL_SYSTICK_MS
+#define CONFIG_SGL_SYSTICK_MS                                      (10)
 #endif
 
 #ifndef CONFIG_SGL_COLOR16_SWAP
@@ -105,20 +106,12 @@ extern "C" {
 #define CONFIG_SGL_EVENT_QUEUE_SIZE                                (32)
 #endif
 
-#ifndef CONFIG_SGL_DIRTY_AREA_THRESHOLD
-#define CONFIG_SGL_DIRTY_AREA_THRESHOLD                            (64)
-#endif
-
-#ifndef CONFIG_SGL_DRAW_USE_DMA
-#define CONFIG_SGL_DRAW_USE_DMA                                    (0)
+#ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (64)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION
 #define CONFIG_SGL_ANIMATION                                       (0)
-#elif (CONFIG_SGL_ANIMATION == 1)
-#   ifndef CONFIG_SGL_ANIMATION_TICK_MS
-#       define CONFIG_SGL_ANIMATION_TICK_MS                        (20)
-#   endif
 #endif
 
 #ifndef CONFIG_SGL_DEBUG
@@ -132,16 +125,8 @@ extern "C" {
 #   endif
 #endif
 
-#ifndef CONFIG_SGL_TEXT_UTF8
-#define CONFIG_SGL_TEXT_UTF8                                       (0)
-#endif
-
 #ifndef CONFIG_SGL_OBJ_USE_NAME
 #define CONFIG_SGL_OBJ_USE_NAME                                    (0)
-#endif
-
-#ifndef CONFIG_SGL_USE_STYLE_UNIFIED_API
-#define CONFIG_SGL_USE_STYLE_UNIFIED_API                           (1)
 #endif
 
 #ifndef CONFIG_SGL_HEAP_ALGO
@@ -155,16 +140,28 @@ extern "C" {
 #   endif
 #endif
 
+#ifndef CONFIG_SGL_FONT_COMPRESSED
+#define CONFIG_SGL_FONT_COMPRESSED                                 (0)
+#endif
+
 #ifndef CONFIG_SGL_FONT_SONG23
 #define CONFIG_SGL_FONT_SONG23                                     (0)
+#endif
+
+#ifndef CONFIG_SGL_FONT_CONSOLAS14
+#define CONFIG_SGL_FONT_CONSOLAS14                                 (0)
 #endif
 
 #ifndef CONFIG_SGL_FONT_CONSOLAS23
 #define CONFIG_SGL_FONT_CONSOLAS23                                 (0)
 #endif
 
-#ifndef CONFIG_SGL_FONT_KAI33
-#define CONFIG_SGL_FONT_KAI33                                      (0)
+#ifndef CONFIG_SGL_FONT_CONSOLAS24
+#define CONFIG_SGL_FONT_CONSOLAS24                                 (0)
+#endif
+
+#ifndef CONFIG_SGL_FONT_CONSOLAS32
+#define CONFIG_SGL_FONT_CONSOLAS32                                 (0)
 #endif
 
 #if !(defined(CONFIG_SGL_THEME_DARK) || defined(CONFIG_SGL_THEME_LIGHT))

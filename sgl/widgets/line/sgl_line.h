@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -100,11 +100,6 @@ static inline void sgl_line_set_width(sgl_obj_t *obj, uint8_t width)
 	SGL_ASSERT(obj != NULL);
 	sgl_line_t *line = (sgl_line_t*)obj;
 	line->desc.width = width << 1;
-
-	obj->coords.x1 = line->desc.start.x - width;
-	obj->coords.y1 = line->desc.start.y - width;
-	obj->coords.x2 = line->desc.end.x + width;
-	obj->coords.y2 = line->desc.end.y + width;
 	sgl_obj_set_dirty(obj);
 }
 

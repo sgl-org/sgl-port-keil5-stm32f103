@@ -129,17 +129,14 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     else if(evt->type == SGL_EVENT_PRESSED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_APPLY;
+            sgl_obj_update_area(&apply_coords);
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_CLOSE;
+            sgl_obj_update_area(&close_coords);
         }
         else {
-            sgl_obj_clear_dirty(obj);
             return;
-        }
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
         }
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
@@ -153,8 +150,8 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
             sgl_obj_clear_dirty(obj);
             return;
         }
+        sgl_obj_set_dirty(obj);
     }
-
 }
 
 

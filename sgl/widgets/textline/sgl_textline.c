@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,10 +52,6 @@ static void sgl_textline_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         }
 
         sgl_draw_string_mult_line(surf, &text_area, obj->coords.x1 + obj->radius, obj->coords.y1 + obj->radius, textline->text, textline->color, textline->alpha, textline->font, textline->line_margin);
-    }
-
-    if(obj->event_fn) {
-        obj->event_fn(evt);
     }
 }
 

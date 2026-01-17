@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -96,6 +96,7 @@ typedef struct sgl_event {
  * @param none
  * @return 0 on success, -1 on failure
  * @note !!!!!! the SGL_EVENT_QUEUE_SIZE must be power of 2 !!!!!!
+ *       You must check the return value of this function.
  */
 int sgl_event_queue_init(void);
 
@@ -174,7 +175,7 @@ void sgl_event_task(void);
  *            bsp_touch_read_pos(&pos_x, &pos_y);
  *            button_status = bsp_touch_read_status();
  *            
- *            sgl_event_read_pos_polling(pos_x, pos_y, button_status);
+ *            sgl_event_pos_input(pos_x, pos_y, button_status);
  *        }
  */
 void sgl_event_pos_input(int16_t x, int16_t y, bool flag);

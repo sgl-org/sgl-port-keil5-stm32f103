@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -112,16 +112,6 @@ static void sgl_scroll_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         if (scroll->direct == SGL_DIRECT_HORIZONTAL && scroll->value < 100) {
             scroll->value ++;
             sgl_obj_move_child_pos_x(scroll->bind, evt->distance);
-        }
-    }
-    else if(evt->type == SGL_EVENT_PRESSED) {
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
-    }
-    else if(evt->type == SGL_EVENT_RELEASED) {
-        if(obj->event_fn) {
-            obj->event_fn(evt);
         }
     }
 }

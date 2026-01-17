@@ -11,7 +11,7 @@
 #define    CONFIG_SGL_EVENT_QUEUE_SIZE        16
 #define    CONFIG_SGL_ANIMATION               1
 #define    CONFIG_SGL_ANIMATION_TICK_MS       10
-#define    CONFIG_SGL_DEBUG                   0
+#define    CONFIG_SGL_DEBUG                   1
 #define    CONFIG_SGL_LOG_COLOR               1
 #define    CONFIG_SGL_LOG_LEVEL               0
 #define    CONFIG_SGL_BOOT_LOGO               0

@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,7 +75,6 @@ static const uint8_t btn_enter_bitmap[] = {
 
 static sgl_icon_pixmap_t enter_icon = {
     .bitmap = btn_enter_bitmap,
-    .bpp = 4,
     .height = 20,
     .width = 30,
 };
@@ -101,7 +100,6 @@ static const uint8_t btn_backspace_bitmap[] = {
 
 static sgl_icon_pixmap_t backspace_icon = {
     .bitmap = btn_backspace_bitmap,
-    .bpp = 4,
     .height = 13,
     .width = 30,
 };
@@ -208,13 +206,10 @@ static void sgl_numberkbd_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_eve
             numberkbd->opcode = (uint8_t)kbd_digits[btn_row][btn_col];
         }
         else {
-            sgl_obj_clear_dirty(obj);
             return;
         }
 
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
+        sgl_obj_set_dirty(obj);
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(numberkbd->opcode == 0) {
@@ -222,6 +217,7 @@ static void sgl_numberkbd_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_eve
             return;
         }
         numberkbd->opcode = 0;
+        sgl_obj_set_dirty(obj);
     }
     else if(evt->type == SGL_EVENT_DRAW_INIT) {
         int16_t new_width = box_w * NUMBERKBD_BTN_COL + (NUMBERKBD_BTN_COL + 1) * numberkbd->margin;

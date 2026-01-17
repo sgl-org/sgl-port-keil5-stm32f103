@@ -2,7 +2,7 @@
 # MIT License
 #
 # Copyright(c) 2023-present All contributors of SGL
-# Document reference link: docs directory
+# Document reference link: https://sgl-docs.readthedocs.io
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,13 @@ if(${SGL_HEAP_ALGO} STREQUAL "lwmem")
         ${SGL_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/lwmem/lwmem.c
         ${CMAKE_CURRENT_LIST_DIR}/lwmem/sgl_mm.c
+    )
+endif()
+
+if(${SGL_HEAP_ALGO} STREQUAL "bump")
+    set(SGL_SOURCE
+        ${SGL_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}/bump/sgl_mm.c
     )
 endif()
 

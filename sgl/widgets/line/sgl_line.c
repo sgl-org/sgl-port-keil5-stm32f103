@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ static void sgl_line_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
     sgl_line_t *line = (sgl_line_t*)obj;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_draw_line(surf, &obj->area, &line->desc);
+        sgl_draw_line(surf, &obj->parent->area, &obj->coords, &line->desc);
     }
 }
 
@@ -84,15 +84,10 @@ void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_
     int16_t _x1, _y1, _x2, _y2;
 	sgl_line_t *line = (sgl_line_t*)obj;
 
-	line->desc.start.x = obj->parent->coords.x1 + x1;
-	line->desc.start.y = obj->parent->coords.y1 + y1;
-	line->desc.end.x = obj->parent->coords.x1 + x2;
-	line->desc.end.y = obj->parent->coords.y1 + y2;
-
-    _x1 = line->desc.start.x;
-    _x2 = line->desc.end.x;
-    _y1 = line->desc.start.y;
-    _y2 = line->desc.end.y;
+    _x1 = obj->parent->coords.x1 + x1;
+    _x2 = obj->parent->coords.x1 + x2;
+    _y1 = obj->parent->coords.y1 + y1;
+    _y2 = obj->parent->coords.y1 + y2;
 
 	if (_x1 > _x2) {
 		sgl_swap(&_x1, &_x2);
@@ -102,10 +97,10 @@ void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_
 	}
 
 	/* default thinckness is 1 */
-	obj->coords.x1 = _x1 - 1;
-	obj->coords.y1 = _y1 - 1;
-	obj->coords.x2 = _x2 + 1;
-	obj->coords.y2 = _y2 + 1;
+	obj->coords.x1 = _x1;
+	obj->coords.y1 = _y1;
+	obj->coords.x2 = _x2;
+	obj->coords.y2 = _y2;
 	line->desc.width = 2;
 
 	sgl_obj_set_dirty(obj);

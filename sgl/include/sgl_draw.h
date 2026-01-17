@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,8 +67,6 @@ typedef struct sgl_draw_rect {
  * @alpha: alpha
  */
 typedef struct sgl_draw_line {
-    sgl_pos_t        start;
-    sgl_pos_t        end;
     sgl_color_t      color;
     int16_t          width;
     uint8_t          alpha;
@@ -144,7 +142,7 @@ typedef struct sgl_draw_icon {
  * @note if you want to check the area is overlap with surface, you can use this macro
  *       it will direct return if the area is not overlap with surface, otherwise, continue
  */
-#if (CONFIG_SGL_USE_FB_VRAM)
+#if (CONFIG_SGL_USE_FBDEV_VRAM)
 #define sgl_surf_clip_area_return(surf, rect, clip)         do {SGL_UNUSED(rect);} while(0)
 #else
 #define sgl_surf_clip_area_return(surf, rect, clip)         if (!sgl_surf_clip(surf, rect, clip)) return
@@ -161,7 +159,7 @@ typedef struct sgl_draw_icon {
  */
 static inline void sgl_surf_set_pixel(sgl_surf_t *surf, int16_t x, int16_t y, sgl_color_t color) 
 {
-    surf->buffer[y * surf->pitch + x] = color;
+    surf->buffer[y * surf->w + x] = color;
 }
 
 
@@ -175,7 +173,7 @@ static inline void sgl_surf_set_pixel(sgl_surf_t *surf, int16_t x, int16_t y, sg
  */
 static inline sgl_color_t* sgl_surf_get_buf(sgl_surf_t *surf, int16_t x, int16_t y)
 {
-    return &surf->buffer[y * surf->pitch + x];
+    return &surf->buffer[y * surf->w + x];
 }
 
 
@@ -189,7 +187,7 @@ static inline sgl_color_t* sgl_surf_get_buf(sgl_surf_t *surf, int16_t x, int16_t
  */
 static inline sgl_color_t sgl_surf_get_pixel(sgl_surf_t *surf, int16_t x, int16_t y) 
 {
-    return surf->buffer[y * surf->pitch + x];
+    return surf->buffer[y * surf->w + x];
 }
 
 
@@ -204,7 +202,7 @@ static inline sgl_color_t sgl_surf_get_pixel(sgl_surf_t *surf, int16_t x, int16_
  */
 static inline void sgl_surf_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16_t x2, sgl_color_t color) 
 {
-    sgl_color_t *dst = surf->buffer + y * surf->pitch + x1;
+    sgl_color_t *dst = surf->buffer + y * surf->w + x1;
     for (int16_t i = x1; i <= x2; i++) {
         *dst = color;
         dst++;
@@ -223,10 +221,10 @@ static inline void sgl_surf_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16
  */
 static inline void sgl_surf_vline(sgl_surf_t *surf, int16_t x, int16_t y1, int16_t y2, sgl_color_t color) 
 {
-    sgl_color_t *dst = surf->buffer + y1 * surf->pitch + x;
+    sgl_color_t *dst = surf->buffer + y1 * surf->w + x;
     for (int16_t i = y1; i <= y2; i++) {
         *dst = color;
-        dst += surf->pitch;
+        dst += surf->w;
     }
 }
 
@@ -342,11 +340,9 @@ void sgl_draw_circle(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_circle_t *desc
  * @brief draw icon with alpha
  * @param surf   surface
  * @param area   area of icon
- * @param x      x coordinate
- * @param y      y coordinate
- * @param color  color of icon
- * @param alpha  alpha of icon
+ * @param coords coords of icon
  * @param icon   icon pixmap
+ * @param alpha  alpha of icon
  */
 void sgl_draw_icon( sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, sgl_color_t color, uint8_t alpha, const sgl_icon_pixmap_t *icon);
 
@@ -442,12 +438,31 @@ void sgl_draw_fill_vline(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t 
 
 
 /**
+ * @brief draw a slanted line with alpha
+ * @param surf surface
+ * @param area area that contains the line
+ * @param x1 line start x position
+ * @param y1 line start y position
+ * @param x2 line end x position
+ * @param y2 line end y position
+ * @param thickness line width
+ * @param color line color
+ * @param alpha alpha of color
+ * @return none
+ * @note This algorithm is SDF algorithm
+ */
+void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t thickness, sgl_color_t color, uint8_t alpha);
+
+
+/**
  * @brief draw a line
  * @param surf surface
+ * @param area area that contains the line
+ * @param coords line coords
  * @param desc line description
  * @return none
  */
-void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_line_t *desc);
+void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *coords, sgl_draw_line_t *desc);
 
 
 /**

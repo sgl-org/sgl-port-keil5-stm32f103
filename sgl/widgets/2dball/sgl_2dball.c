@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,7 +86,7 @@ static void sgl_2dball_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
                     *blend = sgl_color_mixer(sgl_color_mixer(ball->bg_color, ball->color, ds_alpha), *blend, ball->alpha);
                 }
             }
-            buf += surf->pitch;
+            buf += surf->w;
         }
     }
     else if(evt->type == SGL_EVENT_DRAW_INIT) {

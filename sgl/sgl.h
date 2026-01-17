@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,5 +58,6 @@
 #include "widgets/scope/sgl_scope.h"
 #include "widgets/ext_img/sgl_ext_img.h"
 #include "widgets/polygon/sgl_polygon.h"
+#include "widgets/box/sgl_box.h"
 
 #endif // __SGL_H__

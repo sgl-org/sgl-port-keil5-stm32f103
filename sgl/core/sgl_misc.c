@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -123,15 +123,15 @@ void sgl_boot_animation(void)
     sgl_anim_set_data(logo_anim, logo.text);
     sgl_anim_set_act_duration(logo_anim, 500);
     sgl_anim_set_start_value(logo_anim, 0);
-    sgl_anim_set_end_value(logo_anim, sgl_panel_resolution_width() / 2 - 20);
+    sgl_anim_set_end_value(logo_anim, sgl_fbdev_resolution_width() / 2 - 20);
     sgl_anim_set_path(logo_anim, logo_anim_path, SGL_ANIM_PATH_EASE_IN);
     sgl_anim_set_repeat_cnt(logo_anim, 1);
     sgl_anim_start(logo_anim);
 
     sgl_anim_set_data(bg_anim, logo.background);
     sgl_anim_set_act_duration(bg_anim, 500);
-    sgl_anim_set_start_value(bg_anim, sgl_panel_resolution_width());
-    sgl_anim_set_end_value(bg_anim,  sgl_panel_resolution_width() / 2 - 30);
+    sgl_anim_set_start_value(bg_anim, sgl_fbdev_resolution_width());
+    sgl_anim_set_end_value(bg_anim,  sgl_fbdev_resolution_width() / 2 - 30);
     sgl_anim_set_path(bg_anim, logo_anim_path, SGL_ANIM_PATH_EASE_IN);
     sgl_anim_set_repeat_cnt(bg_anim, 1);
     sgl_anim_start(bg_anim);

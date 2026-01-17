@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,13 +60,7 @@ static void sgl_switch_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         p_switch->status = !p_switch->status;
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
-    }
-    else if(evt->type == SGL_EVENT_RELEASED) {
-        sgl_obj_clear_dirty(obj);
+        sgl_obj_set_dirty(obj);
     }
 }
 

@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,6 @@
 static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_label_t *label = (sgl_label_t*)obj;
-    int text_x = 0, icon_y = 0;
     sgl_pos_t align_pos;
 
     SGL_ASSERT(label->font != NULL);
@@ -52,23 +51,9 @@ static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t
         if (label->bg_flag) {
             sgl_draw_fill_rect(surf, &obj->area, &obj->coords, obj->radius, label->bg_color, label->alpha);
         }
-        if (label->icon) {
-            text_x = label->icon->width + 2;
-        }
 
-        align_pos = sgl_get_text_pos(&obj->coords, label->font, label->text, text_x, (sgl_align_type_t)label->align);
-
-        if (label->icon) {
-            icon_y = ((obj->coords.y2 - obj->coords.y1) - (label->icon->height)) / 2 + 1;
-            sgl_draw_icon(surf, &obj->area, align_pos.x + label->offset_x, obj->coords.y1 + icon_y + label->offset_y, label->color, label->alpha, label->icon);
-        }
-
-        sgl_draw_string(surf, &obj->area, align_pos.x + text_x + label->offset_x, align_pos.y + label->offset_y, label->text, label->color, label->alpha, label->font);
-    }
-    else if (evt->type == SGL_EVENT_PRESSED || evt->type == SGL_EVENT_RELEASED) {
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
+        align_pos = sgl_get_text_pos(&obj->coords, label->font, label->text, 0, (sgl_align_type_t)label->align);
+        sgl_draw_string(surf, &obj->area, align_pos.x + label->offset_x, align_pos.y + label->offset_y, label->text, label->color, label->alpha, label->font);
     }
 }
 

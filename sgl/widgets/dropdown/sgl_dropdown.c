@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,6 @@
 #include <sgl_theme.h>
 #include "sgl_dropdown.h"
 
-
 static const uint8_t dropdown_bitmap[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x30,0x00,
     0x0c,0xfa,0x00,0x00,0x00,0x00,0x05,0xee,0x50,
@@ -48,7 +47,6 @@ static const uint8_t dropdown_bitmap[] = {
 
 static const sgl_icon_pixmap_t dropdown_icon = { 
     .bitmap = dropdown_bitmap,
-    .bpp = 4,
     .height = 10,
     .width = 18,
 };
@@ -143,18 +141,11 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
             obj->coords.y2 += dropdown->expand_h;
         }
 
-        sgl_obj_update_area(obj);
+        sgl_obj_set_dirty(obj);
         dropdown->expend_start = dropdown->head;
     }
-    else if (evt->type == SGL_EVENT_RELEASED) {
-
-    }
     else if (evt->type == SGL_EVENT_DRAW_INIT) {
-        dropdown->option_h = obj->coords.y2 - obj->coords.y1 + 1;
-    }
-
-    if(obj->event_fn) {
-        obj->event_fn(evt);
+        dropdown->option_h = obj->coords.y2 - obj->coords.y1;
     }
 }
 

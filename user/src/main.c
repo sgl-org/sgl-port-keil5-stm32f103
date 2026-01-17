@@ -157,18 +157,16 @@ int main(void)
     gpioDef.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init(LED_PORT, &gpioDef);
 
-    sgl_device_fb_t fb_dev = {
+    sgl_fbinfo_t fbinfo = {
         .xres = PANEL_WIDTH,
         .yres = PANEL_HEIGHT,
-        .xres_virtual = PANEL_WIDTH,
-        .yres_virtual = PANEL_HEIGHT,
         .flush_area = demo_panel_flush_area,
         .buffer[0] = panel_buffer,
         .buffer_size = SGL_ARRAY_SIZE(panel_buffer),
     };
 
-    sgl_device_fb_register(&fb_dev);
-    sgl_device_log_register(UART1_SendString);
+	  sgl_logdev_register(UART1_SendString);
+    sgl_fbdev_register(&fbinfo);
 
     USART1_GPIO_Config();
     USART1_Config();
@@ -191,6 +189,8 @@ int main(void)
     while (1) {
         sgl_task_handle();
         count ++;
+				SGL_LOG_INFO("obj sizeof = %d", sizeof(sgl_obj_t));
+
         if(count > 2000) {
             count = 0;
             int x = sgl_rand() % 240;

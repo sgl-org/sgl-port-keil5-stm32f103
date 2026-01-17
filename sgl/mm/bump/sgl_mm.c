@@ -1,4 +1,4 @@
-/* source/mm/lwmem/mem.c
+/* source/mm/bump/mem.c
  *
  * MIT License
  *
@@ -22,11 +22,16 @@
  * SOFTWARE.
  */
 
+/**
+ * WARNING: This memory allocator is not support free operation, if you free the memory, the memory will be corrupted.
+ */
+
 #include <stdint.h>
 #include <sgl_mm.h>
-#include "lwmem.h"
 #include <sgl_log.h>
 #include <sgl_cfgfix.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 static sgl_mm_monitor_t mem = {
@@ -35,6 +40,8 @@ static sgl_mm_monitor_t mem = {
     .used_size = 0,
 };
 
+static void *bump_mem_start = NULL;
+static size_t bump_mem_offset = 0;
 
 /**
  * @brief  initialize memory pool
@@ -43,13 +50,9 @@ static sgl_mm_monitor_t mem = {
  */
 void sgl_mm_init(void *mem_start, size_t len)
 {
-    lwmem_region_t lwmem[] = {
-        {.start_addr = mem_start, .size = len,},
-        { NULL, 0 },
-    };
-
-    lwmem_assignmem(lwmem);
+    bump_mem_start = mem_start;
     mem.total_size += len;
+    mem.free_size = mem.total_size;
 }
 
 
@@ -60,13 +63,10 @@ void sgl_mm_init(void *mem_start, size_t len)
  */
 void sgl_mm_add_pool(void *mem_start, size_t len)
 {
-    lwmem_region_t lwmem[] = {
-        {.start_addr = mem_start, .size = len,},
-        { NULL, 0 },
-    };
-
-    lwmem_assignmem(lwmem);
-    mem.total_size += len;
+    SGL_UNUSED(mem_start);
+    SGL_UNUSED(len);
+    SGL_LOG_ERROR("sgl_mm_add_pool is not supported");
+    SGL_ASSERT(0);
 }
 
 
@@ -80,15 +80,18 @@ void sgl_mm_add_pool(void *mem_start, size_t len)
 */
 void* sgl_malloc(size_t size)
 {
-    void *ret = lwmem_malloc(size);
-    if(ret == NULL) {
-        SGL_LOG_ERROR("out of memory");
+    uint8_t *ptr = (uint8_t*)bump_mem_start;
+
+    if (size == 0 || (bump_mem_offset + size) > mem.total_size) {
         return NULL;
     }
 
-    mem.used_size += lwmem_get_size(ret);
+    ptr += bump_mem_offset;
+    bump_mem_offset += size;
+    mem.used_size += size;
+    mem.free_size -= size;
 
-    return ret;
+    return (void*)ptr;
 }
 
 
@@ -100,15 +103,11 @@ void* sgl_malloc(size_t size)
  */
 void* sgl_realloc(void *p, size_t size)
 {
-    void *ret = lwmem_realloc(p, size);
-    if(ret == NULL) {
-        SGL_LOG_ERROR("out of memory");
-        return NULL;
-    }
-
-    mem.used_size += size;
-
-    return ret;
+    SGL_UNUSED(p);
+    SGL_UNUSED(size);
+    SGL_LOG_ERROR("sgl_realloc is not supported");
+    SGL_ASSERT(0);
+    return NULL;
 }
 
 
@@ -121,8 +120,9 @@ void* sgl_realloc(void *p, size_t size)
 */
 void sgl_free(void *p)
 {
-    mem.used_size -= lwmem_get_size(p);
-    lwmem_free(p);
+    SGL_UNUSED(p);
+    SGL_LOG_ERROR("sgl_free is not supported");
+    SGL_ASSERT(0);
 }
 
 
@@ -132,6 +132,6 @@ sgl_mm_monitor_t sgl_mm_get_monitor(void)
     int decimal = (mem.used_size * 10000) / mem.total_size - (integer * 100);
     mem.used_rate = integer << 8 | decimal;
     mem.free_size = mem.total_size - mem.used_size;
-    
+
     return mem;
 }

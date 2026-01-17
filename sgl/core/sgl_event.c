@@ -2,9 +2,9 @@
  *
  * MIT License
  *
- * Copyright(c) 2023-present All contributors of SGL  
- * Email: 1477153217@qq.com
- * 
+ * Copyright(c) 2023-present All contributors of SGL
+ * Document reference link: https://sgl-docs.readthedocs.io
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -66,6 +66,7 @@ static struct event_context {
  * @param none
  * @return 0 on success, -1 on failure
  * @note !!!!!! the SGL_EVENT_QUEUE_SIZE must be power of 2 !!!!!!
+ *       You must check the return value of this function.
  */
 int sgl_event_queue_init(void)
 {
@@ -337,9 +338,13 @@ void sgl_event_task(void)
             }
 
             SGL_ASSERT(obj->construct_fn);
-            sgl_obj_set_dirty(obj);
             evt.param = obj->event_data;
             obj->construct_fn(NULL, obj, &evt);
+
+            /* call user event function */
+            if(obj->event_fn) {
+                obj->event_fn(&evt);
+            }
         }
         else {
             SGL_LOG_TRACE("pos is out of object or no event_lost, skip event");
@@ -369,7 +374,7 @@ void sgl_event_task(void)
  *            bsp_touch_read_pos(&pos_x, &pos_y);
  *            button_status = bsp_touch_read_status();
  *            
- *            sgl_event_read_pos_polling(pos_x, pos_y, button_status);
+ *            sgl_event_pos_input(pos_x, pos_y, button_status);
  *        }
  */
 void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
@@ -378,17 +383,33 @@ void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
     static bool pressed_flag = false;
     sgl_event_pos_t pos = { .x = x, .y = y };
 
+    /* rotate touch position */
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+#if (CONFIG_SGL_FBDEV_ROTATION == 90)
+    pos.x = sgl_min(SGL_SCREEN_WIDTH - y, SGL_SCREEN_WIDTH - 1);
+    pos.y = sgl_min(x, SGL_SCREEN_HEIGHT - 1);
+#elif (CONFIG_SGL_FBDEV_ROTATION == 180)
+    pos.x = SGL_SCREEN_WIDTH - x - 1;
+    pos.y = SGL_SCREEN_HEIGHT - y - 1;
+#elif (CONFIG_SGL_FBDEV_ROTATION == 270)
+    pos.x = sgl_min(y, SGL_SCREEN_WIDTH - 1);
+    pos.y = sgl_min(SGL_SCREEN_HEIGHT - x, SGL_SCREEN_HEIGHT - 1);
+#else
+    #error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value (only 0/90/180/270 supported)"
+#endif
+#endif //!CONFIG_SGL_FBDEV_ROTATION
+
     if (flag) {
         if (!pressed_flag) {
             pressed_flag = true;
             sgl_event_send_pos(pos, SGL_EVENT_PRESSED);
-            SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", x, y);
+            SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", pos.x, pos.y);
         }
         else {
             if (last_pos.x != x || last_pos.y != y) {
                 sgl_event_send_pos(pos, SGL_EVENT_MOTION);
                 last_pos = pos;
-                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", x, y);
+                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", pos.x, pos.y);
             }
         }
     }
@@ -396,7 +417,7 @@ void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
         if (pressed_flag) {
             pressed_flag = false;
             sgl_event_send_pos(pos, SGL_EVENT_RELEASED);
-            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", x, y);
+            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", pos.x, pos.y);
         }
     }
 }

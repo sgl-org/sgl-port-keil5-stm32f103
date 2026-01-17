@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,11 +32,9 @@
  * @brief draw icon with alpha
  * @param surf   surface
  * @param area   area of icon
- * @param x      x coordinate
- * @param y      y coordinate
- * @param color  color of icon
- * @param alpha  alpha of icon
+ * @param coords coords of icon
  * @param icon   icon pixmap
+ * @param alpha  alpha of icon
  */
 void sgl_draw_icon( sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, sgl_color_t color, uint8_t alpha, const sgl_icon_pixmap_t *icon)
 {
@@ -61,36 +59,19 @@ void sgl_draw_icon( sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, sg
         return;
     }
 
-    if (icon->bpp == 4) {
-        for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
-            rel_y = y - icon_rect.y1;
+    for (int y = clip.y1; y <= clip.y2; y++) {
+        buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+        rel_y = y - icon_rect.y1;
 
-            for (int x = clip.x1; x <= clip.x2; x++) {
-                rel_x = x - icon_rect.x1;
+        for (int x = clip.x1; x <= clip.x2; x++) {
+            rel_x = x - icon_rect.x1;
 
-                byte_x = rel_x >> 1;
-                dot_index = byte_x + (rel_y * (icon->width >> 1));
-                alpha_dot = (rel_x & 1) ? dot[dot_index] & 0xF : (dot[dot_index] >> 4);
-                alpha_dot = alpha_dot | (alpha_dot << 4);
-                *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(color, *buf, alpha_dot) : sgl_color_mixer(sgl_color_mixer(color, *buf, alpha_dot), *buf, alpha));
-                buf++;
-            }
-        }
-    }
-    else if(icon->bpp == 8) {
-        for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
-            rel_y = y - icon_rect.y1;
-
-            for (int x = clip.x1; x <= clip.x2; x++) {
-                rel_x = x - icon_rect.x1;
-
-                byte_x = rel_x >> 1;
-                dot_index = byte_x + (rel_y * (icon->width >> 1));
-                *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(color, *buf, dot[dot_index]) : sgl_color_mixer(sgl_color_mixer(color, *buf, dot[dot_index]), *buf, alpha));
-                buf++;
-            }
+            byte_x = rel_x >> 1;
+            dot_index = byte_x + (rel_y * (icon->width >> 1));
+            alpha_dot = (rel_x & 1) ? dot[dot_index] & 0xF : (dot[dot_index] >> 4);
+            alpha_dot = alpha_dot | (alpha_dot << 4);
+            *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(color, *buf, alpha_dot) : sgl_color_mixer(sgl_color_mixer(color, *buf, alpha_dot), *buf, alpha));
+            buf++;
         }
     }
 }

@@ -300,12 +300,12 @@ void tft_init(void)
 	SPI1_Init_2();
 }
 
-
-bool demo_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
+void demo_panel_flush_area(sgl_area_t *area, sgl_color_t *src)
 {
-	const int len = (x2 - x1 + 1) * (y2 - y1 + 1);
-  tft_set_win(x1, y1, x2, y2);
+	const int len = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1);
+  tft_set_win(area->x1, area->y1, area->x2, area->y2);
 	GPIO_WriteBit(SPI_DC_PORT, SPI_DC_PIN, 1); // 设置PA0为高电平
 	SPI1_WriteMultByte((uint16_t*)src, len);
-	return true;
+	
+	sgl_fbdev_flush_ready();
 }

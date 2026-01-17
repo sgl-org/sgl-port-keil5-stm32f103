@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -418,7 +418,7 @@ static size_t rand_next = 1;
 int16_t sgl_rand(void)
 {
     rand_next = rand_next * 1103515245 + 12345;
-    return (unsigned int)(rand_next / 65536) % 32768;
+    return (int16_t)((rand_next >> 16) & 0x7FFF);
 }
 
 

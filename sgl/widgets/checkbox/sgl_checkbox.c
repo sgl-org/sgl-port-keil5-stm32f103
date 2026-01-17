@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,7 +89,6 @@ static const uint8_t checked_pixmap[] = {
 
 static sgl_icon_pixmap_t unchecked_icon = {
     .bitmap = unchecked_pixmap,
-    .bpp = 4,
     .height = 22,
     .width = 26,
 };
@@ -97,7 +96,6 @@ static sgl_icon_pixmap_t unchecked_icon = {
 
 static sgl_icon_pixmap_t checked_icon = {
     .bitmap = checked_pixmap,
-    .bpp = 4,
     .height = 22,
     .width = 26,
 };
@@ -141,12 +139,7 @@ static void sgl_checkbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         checkbox->status = !checkbox->status;
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
-    }
-    else if(evt->type == SGL_EVENT_RELEASED) {
-        sgl_obj_clear_dirty(obj);
+        sgl_obj_set_dirty(obj);
     }
     else if(evt->type == SGL_EVENT_DRAW_INIT) {
         if(obj->coords.y2 < obj->coords.y1) {

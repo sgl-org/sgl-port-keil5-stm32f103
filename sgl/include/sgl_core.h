@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -210,13 +210,13 @@ typedef union {
 } sgl_color8_t;
 
 
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == 32)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 32)
 #define sgl_color_t sgl_color32_t
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 24)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
 #define sgl_color_t sgl_color24_t
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 16)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 16)
 #define sgl_color_t sgl_color16_t
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 8)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 8)
 #define sgl_color_t sgl_color8_t
 #endif
 
@@ -229,8 +229,9 @@ typedef union {
  * @y2:     y2 coordinate
  * @buffer: buffer pointer
  * @size:   bytes of buffer
- * @pitch:  bytes per line
- * @h_max:  maximum height
+ * @w:      surf width
+ * @h:      surf height
+ * @dirty:  pointer to dirty area
  */
 typedef struct sgl_surf {
     int16_t      x1;
@@ -239,7 +240,9 @@ typedef struct sgl_surf {
     int16_t      y2;
     sgl_color_t *buffer;
     uint32_t     size;
-    uint32_t     pitch;
+    uint16_t     w;
+    uint16_t     h;
+    sgl_area_t   *dirty;
 } sgl_surf_t;
 
 
@@ -253,9 +256,9 @@ typedef struct sgl_surf {
 * @bitmap: point to image bitmap
 */
 typedef struct sgl_pixmap {
-    uint32_t width : 12;
-    uint32_t height : 12;
-    uint32_t format : 8;
+    uint32_t width : 13;
+    uint32_t height : 13;
+    uint32_t format : 6;
     const uint8_t *bitmap;
 } sgl_pixmap_t;
 
@@ -264,13 +267,11 @@ typedef struct sgl_pixmap {
  * @brief This structure defines an icon, with a bitmap pointing to the
  * @width: pixmap width
  * @height: pixmap height
- * @bpp: bitmap pixel deepth
  * @bitmap: point to icon bitmap
  */
 typedef struct sgl_icon_pixmap {
-    uint32_t       width : 12;
-    uint32_t       height : 12;
-    uint32_t       bpp : 8;
+    uint16_t       width;
+    uint16_t       height;
     const uint8_t *bitmap;
 } sgl_icon_pixmap_t;
 
@@ -280,18 +281,28 @@ typedef struct sgl_icon_pixmap {
 *        all characters in a font, accelerating the search process
 *
 * @bitmap_index: point to bitmap index of font
+* @adv_w: advance width of character width
 * @box_h: height of font
 * @box_w: width of font
 * @ofs_x: offset of character x position
 * @ofs_y: offset of character y position
 */
 typedef struct sgl_font_table {
+#if (CONFIG_SGL_FONT_SMALL_TABLE)
+    const uint16_t bitmap_index;
+    const uint16_t adv_w;
+    const uint8_t  box_h;
+    const uint8_t  box_w;
+    const int8_t   ofs_x;
+    const int8_t   ofs_y;
+#else
     const uint32_t bitmap_index;
     const uint16_t adv_w;
     const uint16_t box_h;
     const uint16_t box_w;
     const int8_t   ofs_x;
     const int8_t   ofs_y;
+#endif
 } sgl_font_table_t;
 
 
@@ -318,22 +329,22 @@ typedef struct sgl_font_unicode {
 * @table: point to struct sgl_font_table
 * @font_table_size: size of struct sgl_font_table
 * @font_height: height of font
-* @bpp: The anti aliasing level of the font
-* @compress: compress flag, 0: no compress, 1: compress
 * @unicode: point to struct sgl_font_unicode struct
 * @unicode_num: number of unicode parts
 * @base_line: base line of font
+* @bpp: The anti aliasing level of the font, only support 2, 4
+* @compress: compress flag, 0: no compress, 1: compress
 */
 typedef struct sgl_font {
     const uint8_t  *bitmap;
     const sgl_font_table_t  *table;
     const uint16_t  font_table_size;
-    const uint16_t  font_height : 12;
-    const uint16_t  bpp : 3;          // AA depth, only support 2, 4
-    const uint16_t  compress : 1;     // compress flag
+    const uint16_t  font_height;
     const sgl_font_unicode_t *unicode;
     const uint32_t  unicode_num;
-    const int32_t   base_line;
+    const int16_t   base_line;
+    const uint8_t   bpp;
+    const uint8_t   compress;
 } sgl_font_t;
 
 
@@ -371,50 +382,47 @@ typedef struct sgl_font {
  *        Only present if CONFIG_SGL_OBJ_USE_NAME is defined.
  */
 typedef struct sgl_obj {
-    sgl_area_t         area;
-    sgl_area_t         coords;
-    void               (*event_fn)(sgl_event_t *e);
-    size_t             event_data;
-    void               (*construct_fn)(sgl_surf_t *surf, struct sgl_obj *obj, sgl_event_t *event);
-    struct sgl_obj     *parent;
-    struct sgl_obj     *child;
-    struct sgl_obj     *sibling;
-    uint8_t            destroyed : 1;
-    uint8_t            dirty : 1;
-    uint8_t            hide : 1;
-    uint8_t            needinit : 1;
-    uint8_t            layout : 2;
-    uint8_t            clickable : 1;
-    uint8_t            movable : 1;
-    uint8_t            border;
-    uint16_t           flexible : 1;
-    uint16_t           focus : 1;
-    uint16_t           pressed : 1;
-    uint16_t           page : 1;
-    uint16_t           radius : 12;
+    sgl_area_t      area;
+    sgl_area_t      coords;
+    void            (*event_fn)(sgl_event_t *e);
+    size_t          event_data;
+    void            (*construct_fn)(sgl_surf_t *surf, struct sgl_obj *obj, sgl_event_t *event);
+    struct sgl_obj  *parent;
+    struct sgl_obj  *child;
+    struct sgl_obj  *sibling;
+    uint8_t         destroyed : 1;
+    uint8_t         dirty : 1;
+    uint8_t         hide : 1;
+    uint8_t         needinit : 1;
+    uint8_t         layout : 2;
+    uint8_t         clickable : 1;
+    uint8_t         movable : 1;
+    uint8_t         border;
+    uint16_t        flexible : 1;
+    uint16_t        focus : 1;
+    uint16_t        pressed : 1;
+    uint16_t        page : 1;
+    uint16_t        radius : 12;
 #if CONFIG_SGL_OBJ_USE_NAME
-    const char         *name;
+    const char      *name;
 #endif
 } sgl_obj_t;
 
 
 /**
- * @brief Represents a page or layer object containing graphical content, child object slots, and background information.
+ * @brief Represents a page object in the SGL graphics system.
  *
- * This structure defines a renderable page unit. It is itself a graphical object (sgl_obj_t)
- * with basic properties like position and size. It owns a drawing surface (surf) for pixel
- * storage and rendering operations. The structure manages a collection of child objects
- * (such as widgets or graphical elements) through the 'slot' array and 'slot_count'.
- * It also holds a default color for rendering operations and an optional pointer to a
- * background image (bg_img) that can be displayed behind the page content.
+ * An sgl_page_t encapsulates a complete, renderable UI page or screen.
+ * It combines a base graphical object, a drawing surface, a background color,
+ * and an optional background pixmap. Pages serve as top-level containers
+ * for UI elements and can be managed by a page manager or display stack.
  *
- * Fields:
- *   obj        - The base graphical object, inheriting core properties and state.
- *   surf       - The drawing surface associated with this page, used for pixel operations.
- *   slot       - Array of pointers to child sgl_obj_t objects managed by this page.
- *   slot_count - The number of valid child object pointers currently in the 'slot' array.
- *   color      - The default color used for rendering operations on this page.
- *   pixmap     - Pointer to the background pixmap; NULL if no background image is set.
+ * Members:
+ * - obj      : Base object (inherits sgl_obj_t), providing position, size, visibility, etc.
+ * - surf     : Drawing surface associated with this page; defines the target buffer or area for rendering.
+ * - color    : Default background color used when no pixmap is set.
+ * - pixmap   : Optional pointer to a background pixmap. If non-NULL, it typically overrides 'color'
+ *              as the background content during rendering (behavior depends on flush/render logic).
  */
 typedef struct sgl_page {
     sgl_obj_t          obj;
@@ -425,139 +433,241 @@ typedef struct sgl_page {
 
 
 /**
- * @brief sgl framebuffer device struct
+ * @brief sgl framebuffer information struct
  * @buffer: framebuffer, this specify the memory address of the framebuffer
- * @framebuffer_size: framebuffer size
+ * @buffer_size: framebuffer size
  * @xres: x resolution
  * @yres: y resolution
- * @xres_virtual: x virtual resolution
- * @yres_virtual: y virtual resolution
  * @flush_area: flush area callback function pointer, return the finished flag
  */
-typedef struct sgl_device_fb {
+typedef struct sgl_fbinfo {
     void      *buffer[SGL_DRAW_BUFFER_MAX];
     uint32_t   buffer_size;
     int16_t    xres;
     int16_t    yres;
-    int16_t    xres_virtual;
-    int16_t    yres_virtual;
-    bool       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
-} sgl_device_fb_t;
+    void       (*flush_area)(sgl_area_t *area, sgl_color_t *src);
+} sgl_fbinfo_t;
+
+
+/**
+ * @brief sgl framebuffer device struct
+ * @fbinfo: framebuffer information, that specify the memory address of the framebuffer and resolution
+ * @dirty_num: dirty area number
+ * @fb_swap: framebuffer swap flag
+ * @fb_status: framebuffer status flag
+ * @dirty: dirty area pool
+ * @page: current page
+ */
+typedef struct sgl_fbdev {
+    sgl_fbinfo_t      fbinfo;
+    uint16_t          dirty_num;
+    uint8_t           fb_swap;
+    volatile uint8_t  fb_status;
+    sgl_area_t        dirty[SGL_DIRTY_AREA_NUM_MAX];
+    sgl_page_t        *page;
+} sgl_fbdev_t;
 
 
 /**
  * @brief sgl log print device struct
- * @log_puts: log print callback function pointer
+ * @logdev: log print callback function pointer
+ * @tick_ms: tick milliseconds
  */
-typedef struct sgl_device_log {
-    void      (*log_puts)(const char *str);
-} sgl_device_log_t;
+typedef struct sgl_system {
+    void               (*logdev)(const char *str);
+    sgl_fbdev_t        fbdev;
+    volatile uint32_t  tick_ms;
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+    sgl_color_t        *rotation;
+#endif
+} sgl_system_t;
 
 
 /**
- * current context, page pointer, and dirty area
- * fb_swap: 0 for fb_dev.buffer[0], 1 for fb_dev.buffer[1]
- * fb_ready: bit 0: fb_dev.buffer[0] is ready, bit 1: fb_dev.buffer[1] is ready
+ * @brief for each child object of parent
+ * @param _child: pointer of child object
+ * @param parent: pointer of parent object
  */
-typedef struct sgl_context {
-    sgl_page_t           *page;
-    sgl_device_fb_t      fb_dev;
-    sgl_device_log_t     log_dev;
-    uint8_t              fb_swap : 4;
-    uint8_t              fb_ready : 2;
-    volatile uint8_t     tick_ms;
-    uint16_t             dirty_num;
-    sgl_area_t           *dirty;
-} sgl_context_t;
+#define  sgl_obj_for_each_child(_child, parent)             for (_child = parent->child; _child != NULL; _child = _child->sibling)
 
 
 /**
- * @brief sgl object foreach child macro
- * @param obj: The parent object whose children are being iterated.
- * @param child: The current child object being processed.
+ * @brief for each child object of parent safely
+ * @param _child: pointer of child object
+ * @param parent: pointer of parent object
  */
-#define  sgl_obj_foreach_child(obj, child)                  for ((child) = (obj)->child; (child) != NULL; (child) = (child)->sibling)
+#define sgl_obj_for_each_child_safe(_child, n, parent)      for (_child = parent->child, n = (_child ? _child->sibling : NULL); _child != NULL; \
+                                                                 _child = n, n = (_child ? _child->sibling : NULL))
 
 
 /* dont to use this variable, it is used internally by sgl library */
-extern sgl_context_t sgl_ctx;
+extern sgl_system_t sgl_system;
 
 
 /**
  * @brief register the frame buffer device
- * @param fb_dev the frame buffer device
+ * @param fbinfo the frame buffer device information
  * @return int, 0 if success, -1 if failed
+ * @note you must check the result of this function
  */
-int sgl_device_fb_register(sgl_device_fb_t *fb_dev);
+int sgl_fbdev_register(sgl_fbinfo_t *fbinfo);
 
 
 /**
- * @brief panel flush function
- * @param x [in] x coordinate
- * @param y [in] y coordinate
- * @param w [in] width
- * @param h [in] height
- * @param src [in] source color
- * @return bool, true if flush is finished, false if is not finished
+ * @brief set framebuffer device flush ready
+ * @param none
+ * @return none
+ * @note this function must be called in DMA callback function after framebuffer device flush
  */
-static inline bool sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
+static inline void sgl_fbdev_flush_ready(void)
+{
+    sgl_system.fbdev.fb_status = (sgl_system.fbdev.fb_status & (1 << sgl_system.fbdev.fb_swap)) | ((1 << (sgl_system.fbdev.fb_swap ^ 1)));
+}
+
+
+/**
+ * @brief check if framebuffer device buffer need to wait ready
+ * @param fbdev point to the framebuffer device
+ * @return bool true if need to wait ready, false if not
+ */
+static inline bool sgl_fbdev_flush_wait_ready(sgl_fbdev_t *fbdev)
+{
+    return fbdev->fb_status == 0;
+}
+
+
+/**
+ * @brief swap the surface buffer
+ * @param none
+ * @return none
+ * @note if you use double buffer, you must call this function after framebuffer device flush
+ */
+static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
+{
+    if (sgl_system.fbdev.fbinfo.buffer[1] != NULL) {
+        surf->buffer = sgl_system.fbdev.fbinfo.buffer[sgl_system.fbdev.fb_swap ^= 1];
+    }
+}
+
+
+/**
+ * @brief get framebuffer device buffer resolution width
+ * @param none
+ * @return framebuffer device buffer resolution width
+ */
+static inline int16_t sgl_fbdev_resolution_width(void)
+{
+    return sgl_system.fbdev.fbinfo.xres;
+}
+
+/**
+ * @brief get framebuffer device buffer resolution height
+ * @param none
+ * @return framebuffer device buffer resolution height
+ */
+#define  SGL_SCREEN_WIDTH  sgl_fbdev_resolution_width()
+
+
+/**
+ * @brief get framebuffer device buffer resolution height
+ * @param none
+ * @return framebuffer device buffer resolution height
+ */
+static inline int16_t sgl_fbdev_resolution_height(void)
+{
+    return sgl_system.fbdev.fbinfo.yres;
+}
+
+/**
+ * @brief get framebuffer device buffer resolution width
+ * @param none
+ * @return framebuffer device buffer resolution width
+ */
+#define  SGL_SCREEN_HEIGHT  sgl_fbdev_resolution_height()
+
+
+/**
+ * @brief get framebuffer device buffer address
+ * @param none
+ * @return framebuffer device buffer address
+ */
+static inline void* sgl_fbdev_buffer_address(void)
+{
+    return sgl_system.fbdev.fbinfo.buffer[0];
+}
+
+
+/**
+ * @brief framebuffer device flush function
+ * @param area [in] area of flush, that is x1, y1, x2, y2: area of flush
+ *                  area contains the coordinates of the area to be flushed
+ *                  - x1: x coordinate of the top left corner of the area
+ *                  - y1: y coordinate of the top left corner of the area
+ *                  - x2: x coordinate of the bottom right corner of the area
+ *                  - y2: y coordinate of the bottom right corner of the area
+ * @param src [in] source color
+ */
+static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
-    uint16_t w = x2 - x1 + 1;
-    uint16_t h = y2 - y1 + 1;
+    uint16_t w = area->x2 - area->x1 + 1;
+    uint16_t h = area->y2 - area->y1 + 1;
     uint16_t *dst = (uint16_t *)src;
     for (size_t i = 0; i < (size_t)(w * h); i++) {
         dst[i] = (dst[i] << 8) | (dst[i] >> 8);
     }
 #endif
-    return sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
-}
 
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+    uint16_t width = area->x2 - area->x1 + 1;
+    uint16_t height = area->y2 - area->y1 + 1;
+    sgl_area_t area_dst = *area;
 
-/**
- * @brief get panel resolution width
- * @param none
- * @return panel resolution width
- */
-static inline int16_t sgl_panel_resolution_width(void)
-{
-    return sgl_ctx.fb_dev.xres;
-}
+#if (CONFIG_SGL_FBDEV_ROTATION == 90)
+    for (uint16_t y = 0; y < height; y++) {
+        for (uint16_t x = 0; x < width; x++) {
+            size_t src_idx = y * width + x;
+            size_t dst_idx = (width - 1 - x) * height + y;
+            sgl_system.rotation[dst_idx] = src[src_idx];
+        }
+    }
 
-/**
- * @brief get panel resolution height
- * @param none
- * @return panel resolution height
- */
-#define  SGL_SCREEN_WIDTH  sgl_panel_resolution_width()
+    area_dst.x1 = area->y1;
+    area_dst.y1 = SGL_SCREEN_WIDTH - area->x2 - 1;
+    area_dst.x2 = sgl_min(area->y2, SGL_SCREEN_HEIGHT - 1);
+    area_dst.y2 = sgl_min(SGL_SCREEN_WIDTH - area->x1 - 1, SGL_SCREEN_WIDTH - 1);
 
+#elif (CONFIG_SGL_FBDEV_ROTATION == 180)
+    size_t total = (size_t)(width * height);
+    for (size_t i = 0; i < total; i++) {
+        sgl_system.rotation[i] = src[total - 1 - i];
+    }
 
-/**
- * @brief get panel resolution height
- * @param none
- * @return panel resolution height
- */
-static inline int16_t sgl_panel_resolution_height(void)
-{
-    return sgl_ctx.fb_dev.yres;
-}
+    area_dst.x1 = SGL_SCREEN_WIDTH  - area->x2 - 1;
+    area_dst.y1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
+    area_dst.x2 = SGL_SCREEN_WIDTH  - area->x1 - 1;
+    area_dst.y2 = SGL_SCREEN_HEIGHT - area->y1 - 1;
 
-/**
- * @brief get panel resolution width
- * @param none
- * @return panel resolution width
- */
-#define  SGL_SCREEN_HEIGHT  sgl_panel_resolution_height()
+#elif (CONFIG_SGL_FBDEV_ROTATION == 270)
+    for (uint16_t y = 0; y < height; y++) {
+        for (uint16_t x = 0; x < width; x++) {
+            size_t src_idx = y * width + x;
+            size_t dst_idx = x * height + (height - 1 - y);
+            sgl_system.rotation[dst_idx] = src[src_idx];
+        }
+    }
 
-
-/**
- * @brief get panel buffer address
- * @param none
- * @return panel buffer address
- */
-static inline void* sgl_panel_buffer_address(void)
-{
-    return sgl_ctx.fb_dev.buffer[0];
+    area_dst.x1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
+    area_dst.y1 = area->x1;
+    area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_HEIGHT - 1);
+    area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_WIDTH - 1);
+#else
+#error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value (only 0/90/180/270 supported)"
+#endif
+    sgl_system.fbdev.fbinfo.flush_area(&area_dst, sgl_system.rotation);
+#else
+    sgl_system.fbdev.fbinfo.flush_area(area, src);
+#endif
 }
 
 
@@ -565,10 +675,11 @@ static inline void* sgl_panel_buffer_address(void)
  * @brief register log output device
  * @param log_puts log output function
  * @return none
+ * @note if you want to use print log into uart or other devices, you must register log output device first
  */
-static inline void sgl_device_log_register(void (*log_puts)(const char *str))
+static inline void sgl_logdev_register(void (*puts)(const char *str))
 {
-    sgl_ctx.log_dev.log_puts = log_puts;
+    sgl_system.logdev = puts;
 }
 
 
@@ -576,11 +687,12 @@ static inline void sgl_device_log_register(void (*log_puts)(const char *str))
  * @brief log output function
  * @param str log string
  * @return none
+ * @note if you want to use printf function, you must register log output device first
  */
 static inline void sgl_log_stdout(const char *str)
 {
-    if (sgl_ctx.log_dev.log_puts) {
-        sgl_ctx.log_dev.log_puts(str);
+    if (sgl_system.logdev) {
+        sgl_system.logdev(str);
     }
 }
 
@@ -600,7 +712,7 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
  */
 static inline uint8_t sgl_tick_get(void)
 {
-    return sgl_ctx.tick_ms;
+    return sgl_system.tick_ms;
 }
 
 
@@ -613,7 +725,7 @@ static inline uint8_t sgl_tick_get(void)
  */
 static inline void sgl_tick_inc(uint8_t ms)
 {
-    sgl_ctx.tick_ms += ms;
+    sgl_system.tick_ms += ms;
 }
 
 
@@ -624,7 +736,7 @@ static inline void sgl_tick_inc(uint8_t ms)
  */
 static inline void sgl_tick_reset(void)
 {
-    sgl_ctx.tick_ms = 0;
+    sgl_system.tick_ms = 0;
 }
 
 
@@ -636,17 +748,17 @@ static inline void sgl_tick_reset(void)
 static inline sgl_color_t sgl_int2color(uint32_t color)
 {
     sgl_color_t c;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == 32)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 32)
     c.full = color;
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 24)
-    c.ch.blue    = (uint8_t)(color & 0xff);
-    c.ch.green   = (uint8_t)((color >> 8) & 0xff);
-    c.ch.red     = (uint8_t)((color >> 16) & 0xff);
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 16)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
+    c.ch.blue    = (uint8_t)color;
+    c.ch.green   = (uint8_t)(color >> 8);
+    c.ch.red     = (uint8_t)(color >> 16);
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 16)
     c.ch.blue    = (uint8_t)(color & 0x1f);
     c.ch.green   = (uint8_t)((color >> 5) & 0x3f);
     c.ch.red     = (uint8_t)((color >> 11) & 0x1f);
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 8)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 8)
     c.ch.blue    = (uint8_t)(color & 0x3);
     c.ch.green   = (uint8_t)((color >> 2) & 0x7);
     c.ch.red     = (uint8_t)((color >> 5) & 0x7);
@@ -663,7 +775,7 @@ static inline sgl_color_t sgl_int2color(uint32_t color)
 static inline uint32_t sgl_color2int(sgl_color_t color)
 {
     uint32_t c;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == 24)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
     c = color.ch.blue | (color.ch.green << 8) | (color.ch.red << 16);
 #else
     c = color.full;
@@ -687,23 +799,6 @@ static inline sgl_color_t sgl_rgb2color(uint8_t red, uint8_t green, uint8_t blue
     color.ch.red = red;
     return color;
 }
-
-
-/**
- * @brief for each child object of parent
- * @param _child: pointer of child object
- * @param parent: pointer of parent object
- */
-#define  sgl_obj_for_each_child(_child, parent)                   for (_child = parent->child; _child != NULL; _child = _child->sibling)
-
-
-/**
- * @brief for each child object of parent safely
- * @param _child: pointer of child object
- * @param parent: pointer of parent object
- */
-#define sgl_obj_for_each_child_safe(_child, n, parent)            for (_child = parent->child, n = (_child ? _child->sibling : NULL); _child != NULL; \
-                                                                       _child = n, n = (_child ? _child->sibling : NULL))
 
 
 /**
@@ -744,7 +839,7 @@ void sgl_obj_remove(sgl_obj_t *obj);
  */
 static inline bool sgl_obj_has_child(sgl_obj_t *obj) {
     SGL_ASSERT(obj != NULL);
-    return obj->child != NULL ? true : false;
+    return (bool)obj->child;
 }
 
 
@@ -767,7 +862,7 @@ static inline sgl_obj_t* sgl_obj_get_child(sgl_obj_t* obj)
  */
 static inline bool sgl_obj_has_sibling(sgl_obj_t *obj) {
     SGL_ASSERT(obj != NULL);
-    return obj->sibling != NULL ? true : false;
+    return (bool)obj->sibling;
 }
 
 
@@ -803,11 +898,16 @@ static inline size_t sgl_obj_get_child_count(sgl_obj_t *obj)
 
 
 /**
- * @brief merge area with current dirty area
- * @param merge [in] merge area
+ * @brief merge an area into global dirty area
+ * 
+ * This function calculates how much rectangle 'a' would need to grow in each direction (left, right, top, bottom)
+ * to fully enclose both 'a' and 'b'. The result is the sum of the expansions along all four sides.
+ * Note: This is not the increase in area, th is a lightweight heuristic for merge cost in bounding-box algorithms.
+ * 
+ * @param area [in] Pointer to the area
  * @return none
  */
-void sgl_obj_dirty_merge(sgl_obj_t *obj);
+void sgl_dirty_area_push(sgl_area_t *area);
 
 
 /**
@@ -832,7 +932,7 @@ static inline void sgl_obj_set_destroyed(sgl_obj_t *obj)
 static inline bool sgl_obj_is_destroyed(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->destroyed == 1 ? true : false;
+    return (bool)obj->destroyed;
 }
 
 
@@ -869,7 +969,7 @@ static inline void sgl_obj_clear_dirty(sgl_obj_t *obj)
 static inline bool sgl_obj_is_dirty(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->dirty == 1 ? true : false;
+    return (bool)obj->dirty;
 }
 
 
@@ -893,7 +993,7 @@ static inline void sgl_obj_needinit(sgl_obj_t *obj)
 static inline bool sgl_obj_is_needinit(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->needinit == 1 ? true : false;
+    return (bool)obj->needinit;
 }
 
 
@@ -918,7 +1018,7 @@ static inline void sgl_obj_set_hidden(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     obj->hide = 1;
-    sgl_obj_dirty_merge(obj);
+    sgl_dirty_area_push(&obj->area);
 }
 
 
@@ -931,7 +1031,7 @@ static inline void sgl_obj_set_visible(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     obj->hide = 0;
-    sgl_obj_dirty_merge(obj);
+    sgl_dirty_area_push(&obj->area);
 }
 
 
@@ -943,7 +1043,7 @@ static inline void sgl_obj_set_visible(sgl_obj_t *obj)
 static inline bool sgl_obj_is_hidden(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->hide == 1 ? true : false;
+    return (bool)obj->hide;
 }
 
 
@@ -983,7 +1083,7 @@ static inline void sgl_obj_set_unclickable(sgl_obj_t *obj)
 static inline bool sgl_obj_is_clickable(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->clickable == 1 ? true : false;
+    return (bool)obj->clickable;
 }
 
 
@@ -1019,7 +1119,7 @@ static inline void sgl_obj_set_unflexible(sgl_obj_t *obj)
 static inline bool sgl_obj_is_flexible(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->flexible == 1 ? true : false;
+    return (bool)obj->flexible;
 }
 
 
@@ -1055,18 +1155,18 @@ static inline void sgl_obj_set_unmovable(sgl_obj_t *obj)
 static inline bool sgl_obj_is_movable(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->movable == 1 ? true : false;
+    return (bool)obj->movable;
 }
 
 
 /**
  * @brief update object area
- * @param obj point to object
+ * @param area point to area that need update
  * @return none, this function will force update object area
  */
-static inline void sgl_obj_update_area(sgl_obj_t *obj)
+static inline void sgl_obj_update_area(sgl_area_t *area)
 {
-    sgl_obj_dirty_merge(obj);
+    sgl_dirty_area_push(area);
 }
 
 
@@ -1138,7 +1238,7 @@ void sgl_obj_move_down(sgl_obj_t *obj);
  * @return none
  * @note Only move among sibling objects
  */
-void sgl_obj_move_foreground(sgl_obj_t *obj);
+void sgl_obj_move_top(sgl_obj_t *obj);
 
 
 /**
@@ -1147,7 +1247,7 @@ void sgl_obj_move_foreground(sgl_obj_t *obj);
  * @return none
  * @note Only move among sibling objects
  */
-void sgl_obj_move_background(sgl_obj_t *obj);
+void sgl_obj_move_bottom(sgl_obj_t *obj);
 
 
 /**
@@ -1402,6 +1502,7 @@ static inline int16_t sgl_obj_get_border_width(sgl_obj_t *obj)
  * @brief Get object fill rectangle
  * @param obj point to object
  * @return object fill rectangle
+ * @note This function is used to obtain the inner area of an object, i.e., the region excluding its borders.
  */
 static inline sgl_area_t sgl_obj_get_fill_rect(sgl_obj_t *obj)
 {
@@ -1455,7 +1556,7 @@ void sgl_screen_load(sgl_obj_t *obj);
  */
 static inline sgl_obj_t* sgl_screen_act(void)
 {
-    return &sgl_ctx.page->obj;
+    return &sgl_system.fbdev.page->obj;
 }
 
 
@@ -1466,7 +1567,7 @@ static inline sgl_obj_t* sgl_screen_act(void)
  */
 static inline sgl_page_t* sgl_page_get_active(void)
 {
-    return sgl_ctx.page;
+    return sgl_system.fbdev.page;
 }
 
 
@@ -1549,13 +1650,13 @@ static inline void sgl_obj_delete_sync(sgl_obj_t *obj)
 static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t factor)
 {
     sgl_color_t ret;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB332)
 
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * (factor >> 5) >> 3);
     ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * (factor >> 5) >> 3);
     ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * (factor >> 6) >> 2);
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB565)
 
     factor = (uint32_t)((uint32_t)factor + 4) >> 3;
     uint32_t bg = (uint32_t)((uint32_t)bg_color.full | ((uint32_t)bg_color.full << 16)) & 0x07E0F81F; 
@@ -1563,13 +1664,13 @@ static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_c
     uint32_t result = ((((fg - bg) * factor) >> 5) + bg) & 0x7E0F81F;
     ret.full = (uint16_t)((result >> 16) | result);
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB888)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB888)
 
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * factor >> 8);
     ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * factor >> 8);
     ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * factor >> 8);
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_ARGB8888)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_ARGB8888)
 
     ret.ch.alpha = bg_color.ch.alpha + ((fg_color.ch.alpha - bg_color.ch.alpha) * factor >> 8);
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * factor >> 8);
@@ -1604,9 +1705,9 @@ void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t facto
  * Writes the specified `color` value to `len` consecutive elements starting at `dest`.
  * This is equivalent to a memset-like operation but for color values (typically 32-bit RGBA).
  *
- * @param dest[out]  Pointer to the start of the destination color buffer.
- * @param color[in]  The color value to fill with.
- * @param len[]in    Number of color elements to write (not bytes).
+ * @param[out] dest   Pointer to the start of the destination color buffer.
+ * @param[in]  color  The color value to fill with.
+ * @param[in]  len    Number of color elements to write (not bytes).
  */
 static inline void sgl_color_set(sgl_color_t *dest, sgl_color_t color, uint32_t len)
 {
@@ -1757,24 +1858,13 @@ static inline void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
 
 
 /**
- * @brief swap the framebuffer buffer
- * @param surf [in] surface
- * @return none
- */
-static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
-{
-    if (sgl_ctx.fb_dev.buffer[1] != NULL) {
-        surf->buffer = sgl_ctx.fb_dev.buffer[sgl_ctx.fb_swap ^= 1];
-    }
-}
-
-
-/**
  * @brief sgl global initialization
  * @param none
- * @return none
+ * @return int, 0 means success, others means failed
+ * @note You should call this function before using sgl and you should call this function after register framebuffer device.
+ *       This function is unsafe, you should check the return value by yourself.
  */
-void sgl_init(void);
+int sgl_init(void);
 
 
 /**

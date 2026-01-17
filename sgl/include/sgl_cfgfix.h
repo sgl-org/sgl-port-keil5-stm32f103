@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,10 +38,13 @@ extern "C" {
  * 
  * @description:
  * 
- * CONFIG_SGL_PANEL_PIXEL_DEPTH:
- *      The pixel depth of panel, it will be used to define the color type
+ * CONFIG_SGL_FBDEV_PIXEL_DEPTH:
+ *      The pixel depth of framebuffer device, it will be used to define the color type
  *
- * CONFIG_SGL_USE_FB_VRAM:
+ * CONFIG_SGL_FBDEV_ROTATION:
+ *      The rotation of framebuffer device, default: 0
+ * 
+ * CONFIG_SGL_USE_FBDEV_VRAM:
  *      If you want to use full framebuffer, please define this macro to 1
  *
  * CONFIG_SGL_SYSTICK_MS:
@@ -78,6 +81,9 @@ extern "C" {
  * CONFIG_SGL_FONT_COMPRESSED:
  *      If you want to use font compressed, please define this macro to 1
  * 
+ * CONFIG_SGL_FONT_SMALL_TABLE:
+ *      If you want to use font small table, please define this macro to 1
+ * 
  * CONFIG_SGL_FONT_SONG23:
  *      If you want to use font song23, please define this macro to 1
  * 
@@ -86,12 +92,16 @@ extern "C" {
  * 
  */
 
-#ifndef CONFIG_SGL_PANEL_PIXEL_DEPTH
-#define CONFIG_SGL_PANEL_PIXEL_DEPTH                               (16)
+#ifndef CONFIG_SGL_FBDEV_PIXEL_DEPTH
+#define CONFIG_SGL_FBDEV_PIXEL_DEPTH                               (16)
 #endif
 
-#ifndef CONFIG_SGL_USE_FB_VRAM
-#define CONFIG_SGL_USE_FB_VRAM                                     (0)
+#ifndef CONFIG_SGL_FBDEV_ROTATION
+#define CONFIG_SGL_FBDEV_ROTATION                                  (0)
+#endif
+
+#ifndef CONFIG_SGL_USE_FBDEV_VRAM
+#define CONFIG_SGL_USE_FBDEV_VRAM                                  (0)
 #endif
 
 #ifndef CONFIG_SGL_SYSTICK_MS
@@ -103,11 +113,11 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_SGL_EVENT_QUEUE_SIZE
-#define CONFIG_SGL_EVENT_QUEUE_SIZE                                (32)
+#define CONFIG_SGL_EVENT_QUEUE_SIZE                                (16)
 #endif
 
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
-#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (64)
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (16)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION
@@ -144,6 +154,10 @@ extern "C" {
 #define CONFIG_SGL_FONT_COMPRESSED                                 (0)
 #endif
 
+#ifndef CONFIG_SGL_FONT_SMALL_TABLE
+#define CONFIG_SGL_FONT_SMALL_TABLE                                (0)
+#endif
+
 #ifndef CONFIG_SGL_FONT_SONG23
 #define CONFIG_SGL_FONT_SONG23                                     (0)
 #endif
@@ -164,7 +178,7 @@ extern "C" {
 #define CONFIG_SGL_FONT_CONSOLAS32                                 (0)
 #endif
 
-#if !(defined(CONFIG_SGL_THEME_DARK) || defined(CONFIG_SGL_THEME_LIGHT))
+#if !(CONFIG_SGL_THEME_DARK || CONFIG_SGL_THEME_LIGHT)
 #   ifndef CONFIG_SGL_THEME_DEFAULT
 #   define CONFIG_SGL_THEME_DEFAULT                                (1)
 #   endif

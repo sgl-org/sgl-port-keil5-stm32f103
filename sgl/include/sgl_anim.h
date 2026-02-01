@@ -48,6 +48,52 @@ typedef void (*sgl_anim_path_cb_t)(struct sgl_anim *anim, int32_t value);
 typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
 
 
+/**
+ * @brief Animation object structure used to manage a single animation instance.
+ *
+ * This structure holds all the necessary state and configuration for an animation,
+ * including timing parameters, value interpolation, callbacks, and linkage in a list.
+ * All time values (act_time, act_delay, act_duration) are in milliseconds.
+ *
+ * @data:      Pointer to user-defined private data associated with this animation.
+ *             Not used internally by the animation engine; intended for application use.
+ * 
+ * @next:      Pointer to the next animation in a singly-linked list.
+ *             Used internally by the animation scheduler to chain active animations.
+ * 
+ * @act_time:  The current elapsed time (in ms) since the animation started (excluding delay).
+ *             Updated automatically during each animation tick.
+ * 
+ * @act_delay: Delay time (in ms) before the animation starts after being added to the system.
+ *             The animation will not progress until this delay has elapsed.
+ * 
+ * @act_duration: Total duration (in ms) of the animation from start_value to end_value.
+ * 
+ * @start_value: The initial value at the beginning of the animation (after delay).
+ * 
+ * @end_value: The target value at the end of the animation.
+ * 
+ * @path_cb: Optional custom callback function to compute intermediate animation values.
+ *           If set, it overrides the built-in path algorithm (`path_algo`).
+ *
+ * @path_algo: Predefined interpolation algorithm (e.g., linear, ease-in, ease-out).
+ *             Used only if `path_cb` is NULL.
+ *
+ * @finish_cb: Callback function invoked when the animation completes (including repeats).
+ *             May be NULL if no cleanup or notification is needed.
+ *
+ * @repeat_cnt: Number of times the animation should repeat.
+ *              - 0: play once (no repeat)
+ *              - n: repeat n times (total plays = n + 1)
+ *              - -1: repeat indefinitely
+ *              @note Only 30 bits are allocated; max value is 0x3FFFFFFE.
+ *
+ * @finished: Flag indicating whether the animation has completed (including all repeats).
+ *            Set to 1 when the animation ends naturally or is stopped.
+ *
+ * @auto_free: If set to 1, the animation object will be automatically freed after completion.
+ *             Useful for fire-and-forget animations; ensure memory was allocated dynamically.
+ */
 typedef struct sgl_anim {
     void                  *data;
     struct sgl_anim       *next;
@@ -241,6 +287,11 @@ static inline void sgl_anim_set_act_duration(sgl_anim_t *anim, uint32_t duration
  * @param  anim animation object
  * @param  repeat_cnt repeat count
  * @return none
+ * @note the repeat count can be set to SGL_ANIM_REPEAT_LOOP or SGL_ANIM_REPEAT_ONCE
+ *       - SGL_ANIM_REPEAT_ONCE: repeat once, it same as repeat count 1
+ *       - SGL_ANIM_REPEAT_LOOP: repeat loop, it same as repeat count -1
+ *       - otherwise: repeat count
+ *       max value: 0x3FFFFFFE
  */
 static inline void sgl_anim_set_repeat_cnt(sgl_anim_t *anim, int32_t repeat_cnt)
 {

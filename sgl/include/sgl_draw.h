@@ -68,7 +68,7 @@ typedef struct sgl_draw_rect {
  */
 typedef struct sgl_draw_line {
     sgl_color_t      color;
-    int16_t          width;
+    uint8_t          width;
     uint8_t          alpha;
 } sgl_draw_line_t;
 

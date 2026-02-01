@@ -38,7 +38,7 @@
  * 1. Extern Flash image object:
  *      you can use this object to draw image from external flash memory
  *      for example:
- *          void flash_port_read_data_from_flash(uint8_t *addr, uint8_t *buf, uint32_t len)
+ *          void flash_port_read_data_from_flash(const size_t addr, uint8_t *buf, uint32_t len)
  *          {
  *              //read the data to the buf from the addr of flash
  *              Flash_Read(addr, buf, len);
@@ -73,7 +73,7 @@
  * 3. Mult pixmap image object:
  *      you can use this object to draw image from external flash memory
  *      for example:
- *          void flash_port_read_data_from_flash(uint8_t *addr, uint8_t *buf, uint32_t len)
+ *          void flash_port_read_data_from_flash(const size_t addr, uint8_t *buf, uint32_t len)
  *          {
  *              //read the data to the buf from the addr of flash
  *              Flash_Read(addr, buf, len);
@@ -116,15 +116,18 @@
 typedef struct sgl_ext_img {
     sgl_obj_t       obj;
     const sgl_pixmap_t *pixmap;
-    void            (*read)(const uint8_t *addr, uint8_t *out, uint32_t len_bytes);
+    void            (*read)(const size_t addr, uint8_t *buf, uint32_t len_bytes);
     uint8_t         alpha;
     uint8_t         pixmap_auto;
+    uint8_t         pixmap_idx;
+    uint8_t         pixmap_num;
     /* RLE compress context */
     sgl_color_t     color;
     uint16_t        remainder;
     uint32_t        index;
-    uint32_t        pixmap_idx;
-    uint32_t        pixmap_num;
+#if CONFIG_SGL_EXT_IMG_USE_BUFFER
+    uint8_t         flash_buffer[512];
+#endif
 }sgl_ext_img_t;
 
 /**
@@ -152,7 +155,7 @@ static inline void sgl_ext_img_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pi
  * @param read ext_img read operation
  * @return none
  */
-static inline void sgl_ext_img_set_read_ops(sgl_obj_t *obj, void (*read)(const uint8_t *addr, uint8_t *out, uint32_t len_bytes))
+static inline void sgl_ext_img_set_read_ops(sgl_obj_t *obj, void (*read)(const size_t addr, uint8_t *out, uint32_t len_bytes))
 {
     SGL_ASSERT(obj != NULL);
     ((sgl_ext_img_t*)obj)->read = read;
@@ -178,8 +181,9 @@ static inline void sgl_ext_img_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  * @param auto_refresh ext_img pixmap auto refresh
  * @return none
  * @note if auto_refresh is true, the ext_img will refresh automatically after pixmap flush conplete
+ * @warning the num max is 255
  */
-static inline void sgl_ext_img_set_pixmap_num(sgl_obj_t *obj, uint32_t num, bool auto_refresh)
+static inline void sgl_ext_img_set_pixmap_num(sgl_obj_t *obj, uint8_t num, bool auto_refresh)
 {
     SGL_ASSERT(obj != NULL);
     ((sgl_ext_img_t*)obj)->pixmap_num = num;
@@ -191,13 +195,26 @@ static inline void sgl_ext_img_set_pixmap_num(sgl_obj_t *obj, uint32_t num, bool
  * @param obj ext_img object
  * @return none
  */
-static inline void sgl_ext_img_set_next_pixmap(sgl_obj_t *obj)
+static inline void sgl_ext_img_set_pixmap_next(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
     uint32_t pixmap_idx = ext_img->pixmap_idx + 1;
     ext_img->pixmap_idx = pixmap_idx >= ext_img->pixmap_num ? 0 : pixmap_idx;
-    SGL_LOG_INFO("pixmap_idx:======================================== %d", ext_img->pixmap_idx);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set ext_img pixmap current index
+ * @param obj ext_img object
+ * @param index ext_img pixmap index
+ * @return none
+ */
+static inline void sgl_ext_img_set_pixmap_index(sgl_obj_t *obj, uint8_t index)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    ext_img->pixmap_idx = sgl_min(index, ext_img->pixmap_num - 1);
     sgl_obj_set_dirty(obj);
 }
 

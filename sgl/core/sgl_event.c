@@ -339,6 +339,7 @@ void sgl_event_task(void)
 
             SGL_ASSERT(obj->construct_fn);
             evt.param = obj->event_data;
+            evt.obj = obj;
             obj->construct_fn(NULL, obj, &evt);
 
             /* call user event function */
@@ -379,8 +380,8 @@ void sgl_event_task(void)
  */
 void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
 {
-    static sgl_event_pos_t last_pos;
-    static bool pressed_flag = false;
+    static sgl_event_pos_t last_press, last_motion;
+    static uint32_t act_count = 0;
     sgl_event_pos_t pos = { .x = x, .y = y };
 
     /* rotate touch position */
@@ -400,24 +401,37 @@ void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
 #endif //!CONFIG_SGL_FBDEV_ROTATION
 
     if (flag) {
-        if (!pressed_flag) {
-            pressed_flag = true;
+        if (!act_count) {
+            act_count = 1;
             sgl_event_send_pos(pos, SGL_EVENT_PRESSED);
+            last_press = pos;
             SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", pos.x, pos.y);
         }
         else {
-            if (last_pos.x != x || last_pos.y != y) {
-                sgl_event_send_pos(pos, SGL_EVENT_MOTION);
-                last_pos = pos;
-                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", pos.x, pos.y);
-            }
+            sgl_event_send_pos(pos, SGL_EVENT_MOTION);
+            last_motion = pos;
+            SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", pos.x, pos.y);
         }
+
+        act_count ++;
     }
     else {
-        if (pressed_flag) {
-            pressed_flag = false;
-            sgl_event_send_pos(pos, SGL_EVENT_RELEASED);
-            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", pos.x, pos.y);
+        if (act_count) {
+            SGL_LOG_INFO("Touch action count: %d", act_count);
+            if (last_press.x == last_motion.x && last_press.y == last_motion.y) {
+                if (act_count < SGL_EVENT_CLICK_INTERVAL) {
+                    sgl_event_send_pos(last_press, SGL_EVENT_CLICKED);
+                    SGL_LOG_INFO("Touch SGL_EVENT_CLICKED x: %d, y: %d", last_press.x, last_press.y);
+                }
+                else {
+                    sgl_event_send_pos(last_press, SGL_EVENT_LONG_CLICKED);
+                    SGL_LOG_INFO("Touch SGL_EVENT_LONG_CLICKED x: %d, y: %d", last_press.x, last_press.y);
+                }
+            }
+
+            act_count = 0;
+            sgl_event_send_pos(last_motion, SGL_EVENT_RELEASED);
+            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", last_motion.x, last_motion.y);
         }
     }
 }

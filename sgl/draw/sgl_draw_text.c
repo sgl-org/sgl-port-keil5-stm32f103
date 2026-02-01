@@ -27,11 +27,6 @@
 #include <sgl_draw.h>
 #include <sgl_math.h>
 
-/**
- * @brief Alpha blending table for 4 bpp and 2 bpp
- */
-static const uint8_t opa4_table[16] = {0,  17, 34,  51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255 };
-static const uint8_t opa2_table[4]  = {0, 85, 170, 255};
 
 #if (CONFIG_SGL_FONT_COMPRESSED)
 /**
@@ -237,12 +232,12 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
 
                 if  (font->bpp == 4) {
                     byte_index = pixel_index >> 1;
-                    alpha_dot =  opa4_table[(pixel_index & 1) ? (dot[byte_index] & 0x0F) : (dot[byte_index] >> 4)];
+                    alpha_dot = sgl_opa4_table[(pixel_index & 1) ? (dot[byte_index] & 0x0F) : (dot[byte_index] >> 4)];
                 }
                 else if (font->bpp == 2) {
                     byte_index = pixel_index >> 2;
                     shift = (3 - (pixel_index & 0x3)) * 2;
-                    alpha_dot = opa2_table[(dot[byte_index] >> shift) & 0x03];
+                    alpha_dot = sgl_opa2_table[(dot[byte_index] >> shift) & 0x03];
                 }
 
                 color_mix = sgl_color_mixer(color, *blend, alpha_dot);
@@ -267,10 +262,10 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
 
             for (int x = clip.x1; x <= clip.x2; x++) {
                 if (font->bpp == 4) {
-                    color_mix = sgl_color_mixer(color, *blend, opa4_table[line_buf[x - text_rect.x1]]);
+                    color_mix = sgl_color_mixer(color, *blend, sgl_opa4_table[line_buf[x - text_rect.x1]]);
                 }
                 else if (font->bpp == 2) {
-                    color_mix = sgl_color_mixer(color, *blend, opa2_table[line_buf[x - text_rect.x1]]);
+                    color_mix = sgl_color_mixer(color, *blend, sgl_opa2_table[line_buf[x - text_rect.x1]]);
                 }
                 *blend = sgl_color_mixer(color_mix, *blend, alpha);
                 blend++;

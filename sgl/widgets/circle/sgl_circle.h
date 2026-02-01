@@ -76,7 +76,8 @@ static inline void sgl_circle_set_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_circle_set_radius(sgl_obj_t *obj, uint16_t radius)
 {
     sgl_circle_t *circle = (sgl_circle_t *)obj;
-    circle->desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    circle->desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

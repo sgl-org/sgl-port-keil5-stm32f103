@@ -41,9 +41,6 @@
  */
 typedef struct sgl_2dball {
     sgl_obj_t       obj;
-    int16_t         cx;
-    int16_t         cy;
-    int16_t         radius;
     uint8_t         alpha;
     sgl_color_t     color;
     sgl_color_t     bg_color;
@@ -106,8 +103,7 @@ static inline void sgl_2dball_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_2dball_set_radius(sgl_obj_t *obj, uint16_t radius)
 {
-    sgl_2dball_t *ball = (sgl_2dball_t *)obj;
-    ball->radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 

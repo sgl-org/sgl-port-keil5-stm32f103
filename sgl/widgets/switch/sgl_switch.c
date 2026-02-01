@@ -36,27 +36,35 @@
 static void sgl_switch_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_switch_t *p_switch = (sgl_switch_t*)(obj);
-    sgl_draw_rect_t *bg_desc = &p_switch->bg_desc;
-    int16_t width = obj->coords.y2 - obj->coords.y1 - 2 * bg_desc->border;
+    int16_t width = obj->coords.y2 - obj->coords.y1 - 2 * obj->border;
     sgl_rect_t knob_rect = { 
-        .y1 = obj->coords.y1 + bg_desc->border,
-        .y2 = obj->coords.y2 - bg_desc->border,
+        .y1 = obj->coords.y1 + obj->border,
+        .y2 = obj->coords.y2 - obj->border,
+    };
+
+    sgl_draw_rect_t bg_desc = {
+        .alpha = p_switch->alpha,
+        .border = obj->border,
+        .color = p_switch->color,
+        .border_color = p_switch->border_color,
+        .pixmap = p_switch->pixmap,
+        .radius = obj->radius,
     };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         if(p_switch->status) {
-            bg_desc->color = p_switch->color;
-            knob_rect.x2 = obj->coords.x2 - bg_desc->border;
+            bg_desc.color = p_switch->color;
+            knob_rect.x2 = obj->coords.x2 - obj->border;
             knob_rect.x1 = knob_rect.x2 - width;
         }
         else {
-            bg_desc->color = p_switch->bg_color;
-            knob_rect.x1 = obj->coords.x1 + bg_desc->border;
+            bg_desc.color = p_switch->bg_color;
+            knob_rect.x1 = obj->coords.x1 + obj->border;
             knob_rect.x2 = knob_rect.x1 + width;
         }
 
-        sgl_draw_rect(surf, &obj->area, &obj->coords, &p_switch->bg_desc);
-        sgl_draw_fill_rect(surf, &obj->area, &knob_rect, obj->radius - 2 * bg_desc->border, p_switch->knob_color, p_switch->bg_desc.alpha);
+        sgl_draw_rect(surf, &obj->area, &obj->coords, &bg_desc);
+        sgl_draw_fill_rect(surf, &obj->area, &knob_rect, obj->radius - obj->border, p_switch->knob_color, p_switch->alpha);
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         p_switch->status = !p_switch->status;
@@ -85,12 +93,11 @@ sgl_obj_t* sgl_switch_create(sgl_obj_t* parent)
     sgl_obj_init(&p_switch->obj, parent);
     obj->construct_fn = sgl_switch_construct_cb;
     sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
+    sgl_obj_set_radius(obj, SGL_THEME_RADIUS);
 
-    p_switch->bg_desc.alpha = SGL_THEME_ALPHA;
-    p_switch->bg_desc.color = SGL_THEME_COLOR;
-    p_switch->bg_desc.border_color = SGL_THEME_BORDER_COLOR;
-    p_switch->bg_desc.border = SGL_THEME_BORDER_WIDTH;
-    p_switch->bg_desc.radius = -1;
+    p_switch->alpha = SGL_THEME_ALPHA;
+    p_switch->color = SGL_THEME_COLOR;
+    p_switch->border_color = SGL_THEME_BORDER_COLOR;
 
     p_switch->status = false;
     p_switch->bg_color = SGL_THEME_BG_COLOR;

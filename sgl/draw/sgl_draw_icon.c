@@ -33,8 +33,10 @@
  * @param surf   surface
  * @param area   area of icon
  * @param coords coords of icon
- * @param icon   icon pixmap
  * @param alpha  alpha of icon
+ * @param icon   icon pixmap
+ * @return none
+ * @note This function is only for 4bpp icon bitmap
  */
 void sgl_draw_icon( sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, sgl_color_t color, uint8_t alpha, const sgl_icon_pixmap_t *icon)
 {

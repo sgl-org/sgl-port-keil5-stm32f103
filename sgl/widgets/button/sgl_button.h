@@ -43,10 +43,13 @@
  */
 typedef struct sgl_button {
     sgl_obj_t               obj;
-    sgl_draw_rect_t         rect;
+    sgl_color_t             color;
+    sgl_color_t             border_color;
+    const sgl_pixmap_t      *pixmap;
     const char              *text;
     const sgl_font_t        *font;
     sgl_color_t             text_color;
+    uint8_t                 alpha;
     uint8_t                 align;
 }sgl_button_t;
 
@@ -68,7 +71,7 @@ sgl_obj_t* sgl_button_create(sgl_obj_t* parent);
 static inline void sgl_button_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    button->rect.color = color;
+    button->color = color;
     sgl_obj_set_dirty(obj);
 }
 
@@ -81,7 +84,7 @@ static inline void sgl_button_set_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_button_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    button->rect.alpha = alpha;
+    button->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
 
@@ -93,8 +96,6 @@ static inline void sgl_button_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_button_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_button_t *button = (sgl_button_t*)obj;
-    button->rect.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
@@ -108,7 +109,7 @@ static inline void sgl_button_set_border_width(sgl_obj_t *obj, uint8_t width)
 static inline void sgl_button_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    button->rect.border_color = color;
+    button->border_color = color;
     sgl_obj_set_dirty(obj);
 }
 
@@ -121,7 +122,7 @@ static inline void sgl_button_set_border_color(sgl_obj_t *obj, sgl_color_t color
 static inline void sgl_button_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    button->rect.pixmap = pixmap;
+    button->pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
 
@@ -133,8 +134,7 @@ static inline void sgl_button_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pix
  */
 static inline void sgl_button_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_button_t *button = (sgl_button_t*)obj;
-    button->rect.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 

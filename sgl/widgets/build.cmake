@@ -47,4 +47,5 @@ set(SGL_SOURCE
     ${CMAKE_CURRENT_LIST_DIR}/dropdown/sgl_dropdown.c
     ${CMAKE_CURRENT_LIST_DIR}/scope/sgl_scope.c
     ${CMAKE_CURRENT_LIST_DIR}/polygon/sgl_polygon.c
+    ${CMAKE_CURRENT_LIST_DIR}/box/sgl_box.c
 )

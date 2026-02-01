@@ -52,20 +52,23 @@ struct sgl_page;
 #define  SGL_EVENT_PRESSED              (2)
 #define  SGL_EVENT_RELEASED             (3)
 #define  SGL_EVENT_CLICKED              (4)
-#define  SGL_EVENT_MOTION               (5)
-#define  SGL_EVENT_MOVE_UP              (6)
-#define  SGL_EVENT_MOVE_DOWN            (7)
-#define  SGL_EVENT_MOVE_LEFT            (8)
-#define  SGL_EVENT_MOVE_RIGHT           (9)
-#define  SGL_EVENT_LONG_PRESSED         (10)
-#define  SGL_EVENT_OPTION_WALK          (11)
-#define  SGL_EVENT_OPTION_TAP           (12)
-#define  SGL_EVENT_DRAW_INIT            (13)
-#define  SGL_EVENT_DRAW_MAIN            (14)
-#define  SGL_EVENT_FOCUSED              (15)
-#define  SGL_EVENT_UNFOCUSED            (16)
+#define  SGL_EVENT_LONG_CLICKED         (5)
+#define  SGL_EVENT_MOTION               (6)
+#define  SGL_EVENT_MOVE_UP              (7)
+#define  SGL_EVENT_MOVE_DOWN            (8)
+#define  SGL_EVENT_MOVE_LEFT            (9)
+#define  SGL_EVENT_MOVE_RIGHT           (10)
+#define  SGL_EVENT_LONG_PRESSED         (11)
+#define  SGL_EVENT_OPTION_WALK          (12)
+#define  SGL_EVENT_OPTION_TAP           (13)
+#define  SGL_EVENT_DRAW_INIT            (14)
+#define  SGL_EVENT_DRAW_MAIN            (15)
+#define  SGL_EVENT_FOCUSED              (16)
+#define  SGL_EVENT_UNFOCUSED            (17)
 #define  sgl_event_type_t               uint8_t
 
+
+#define  SGL_EVENT_CLICK_INTERVAL       (CONFIG_SGL_EVENT_CLICK_INTERVAL)
 
 /**
 * @brief Event location structure, Used to represent the coordinates of an event, 
@@ -138,12 +141,41 @@ static inline void sgl_event_send(sgl_event_t event)
  *       if you want to send an event to the button, you can call:
  *       ---- press button case  : sgl_event_send_obj(button, SGL_EVENT_PRESSED);
  *       ---- release button case: sgl_event_send_obj(button, SGL_EVENT_RELEASED);
+ * 
+ * @tip: You can also send you own event to the specified object, for example, 
+ *       The MY_EVENT_TYPE is defined by you, and you can use it in your own event handler, for example:
+ *       ...
+ *       sgl_event_send_obj(button, MY_EVENT_TYPE);
+ *       ...
+ *       void my_event_handler(sgl_event_t *event)
+ *       {
+ *           if (event->type == MY_EVENT_TYPE) {
+ *               // do something
+ *           }
+ *       }
  */
 static inline void sgl_event_send_obj(struct sgl_obj *obj, sgl_event_type_t type)
 {
     sgl_event_t event = {0};
     event.obj = obj;
     event.type = type;
+    sgl_event_send(event);
+}
+
+
+/**
+ * @brief Send a motion event to the specified object
+ * @param pos The position of the motion event
+ * @param type The type of the motion event
+ * @param distance The distance of the motion event
+ * @return none
+ */
+static inline void sgl_event_send_motion(sgl_event_pos_t pos, sgl_event_type_t type, uint16_t distance)
+{
+    sgl_event_t event = {0};
+    event.pos = pos;
+    event.type = type;
+    event.distance = distance;
     sgl_event_send(event);
 }
 

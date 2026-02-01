@@ -112,7 +112,8 @@ static inline void sgl_dropdown_set_border_color(sgl_obj_t *obj, sgl_color_t col
 static inline void sgl_dropdown_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
-    dropdown->body_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    dropdown->body_desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

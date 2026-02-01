@@ -36,22 +36,36 @@
 static void sgl_slider_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_slider_t *slider = (sgl_slider_t*)obj;
+
+    sgl_draw_rect_t desc = {
+        .alpha = slider->alpha,
+        .border = obj->border,
+        .border_color = slider->border_color,
+        .pixmap = slider->pixmap,
+        .color = slider->track_color,
+        .radius = obj->radius,
+    };
+
     sgl_area_t knob = {
-        .x1 = obj->coords.x1 + slider->body.border,
-        .x2 = obj->coords.x2 - slider->body.border,
-        .y1 = obj->coords.y1 + slider->body.border,
-        .y2 = obj->coords.y2 - slider->body.border,
+        .x1 = obj->coords.x1 + obj->border,
+        .x2 = obj->coords.x2 - obj->border,
+        .y1 = obj->coords.y1 + obj->border,
+        .y2 = obj->coords.y2 - obj->border,
     };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         if(slider->direct == SGL_DIRECT_HORIZONTAL) {
-            knob.x2 = obj->coords.x1 + (obj->coords.x2 - obj->coords.x1) * slider->value / 100 - slider->body.border;
+            knob.x2 = obj->coords.x1 + (obj->coords.x2 - obj->coords.x1) * slider->value / 100 - obj->border;
         }
         else {
-            knob.y1 = obj->coords.y2 - (obj->coords.y2 - obj->coords.y1) * slider->value / 100 + slider->body.border;
+            knob.y1 = obj->coords.y2 - (obj->coords.y2 - obj->coords.y1) * slider->value / 100 + obj->border;
         }
-        sgl_draw_rect(surf, &obj->area, &obj->coords, &slider->body);
-        sgl_draw_fill_rect_with_border(surf, &knob, &obj->coords, obj->radius, slider->color, slider->body.border_color, slider->body.border, slider->alpha);
+
+        /* set knob area */
+        sgl_area_selfclip(&knob, &obj->area);
+
+        sgl_draw_rect(surf, &obj->area, &obj->coords, &desc);
+        sgl_draw_fill_rect_with_border(surf, &knob, &obj->coords, obj->radius, slider->fill_color, slider->border_color, obj->border, slider->alpha);
     }
     else if(evt->type == SGL_EVENT_PRESSED ||
         evt->type == SGL_EVENT_MOVE_DOWN || evt->type == SGL_EVENT_MOVE_UP || evt->type == SGL_EVENT_MOVE_LEFT || evt->type == SGL_EVENT_MOVE_RIGHT
@@ -99,12 +113,10 @@ sgl_obj_t* sgl_slider_create(sgl_obj_t* parent)
     sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     slider->direct = SGL_DIRECT_HORIZONTAL;
-    slider->body.alpha = SGL_THEME_ALPHA;
-    slider->body.color = SGL_THEME_BG_COLOR;
-    slider->body.border = SGL_THEME_BORDER_WIDTH;
-    slider->body.border_color = SGL_THEME_BORDER_COLOR;
-
-    slider->color = SGL_THEME_COLOR;
+    slider->alpha = SGL_THEME_ALPHA;
+    slider->track_color = SGL_THEME_COLOR;
+    slider->border_color = SGL_THEME_BORDER_COLOR;
+    slider->fill_color = SGL_THEME_BG_COLOR;
     slider->alpha = SGL_THEME_ALPHA;
 
     return obj;

@@ -227,6 +227,10 @@ void sgl_draw_circle(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_circle_t *desc
     uint16_t border = desc->border;
     sgl_color_t border_color = desc->border_color;
 
+    if (unlikely(desc->alpha == SGL_ALPHA_MIN)) {
+        return;
+    }
+
     if (desc->pixmap == NULL) {
         if (border) {
             sgl_draw_fill_circle_with_border(surf, area, desc->cx, desc->cy, radius, color, border_color, border, alpha);

@@ -58,6 +58,11 @@ extern "C" {
 #define sgl_swap(a, b)                    do { (*a) ^= (*b); (*b) ^= (*a); (*a) ^= (*b); } while (0)
 
 
+#define SGL_FIXED_SHIFT                   (10)
+#define SGL_FIXED_ONE                     (1 << SGL_FIXED_SHIFT)
+#define SGL_FIXED_MASK                    (SGL_FIXED_ONE - 1)
+
+
 /**
  * @brief Calculate the sine of an angle
  * @param angle: Angle in degrees such 0-359

@@ -41,7 +41,10 @@
  */
 typedef struct sgl_rectangle {  
     sgl_obj_t       obj;
-    sgl_draw_rect_t desc;
+    sgl_color_t     color;
+    sgl_color_t     border_color;
+    const sgl_pixmap_t *pixmap;
+    uint8_t         alpha;
 }sgl_rectangle_t;
 
 
@@ -62,7 +65,7 @@ sgl_obj_t* sgl_rect_create(sgl_obj_t* parent);
 static inline void sgl_rect_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
-    rect->desc.color = color;
+    rect->color = color;
     sgl_obj_set_dirty(obj);
 }
 
@@ -75,10 +78,9 @@ static inline void sgl_rect_set_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_rect_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
     sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
-    rect->desc.alpha = alpha;
+    rect->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
-
 
 /**
  * @brief  set rectangle radius
@@ -88,8 +90,7 @@ static inline void sgl_rect_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_rect_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
-    rect->desc.radius = radius;
+    sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 
@@ -101,8 +102,6 @@ static inline void sgl_rect_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_rect_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
-    rect->desc.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
@@ -116,7 +115,7 @@ static inline void sgl_rect_set_border_width(sgl_obj_t *obj, uint8_t width)
 static inline void sgl_rect_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
-    rect->desc.border_color = color;
+    rect->border_color = color;
     sgl_obj_set_dirty(obj);
 }
 
@@ -129,7 +128,7 @@ static inline void sgl_rect_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_rect_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
     sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
-    rect->desc.pixmap = pixmap;
+    rect->pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
 

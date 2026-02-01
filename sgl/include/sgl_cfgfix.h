@@ -44,6 +44,9 @@ extern "C" {
  * CONFIG_SGL_FBDEV_ROTATION:
  *      The rotation of framebuffer device, default: 0
  * 
+ * CONFIG_SGL_FBDEV_RUNTIME_ROTATION:
+ *      If you want to use runtime rotation, please define this macro to 1
+ * 
  * CONFIG_SGL_USE_FBDEV_VRAM:
  *      If you want to use full framebuffer, please define this macro to 1
  *
@@ -56,12 +59,18 @@ extern "C" {
  * CONFIG_SGL_EVENT_QUEUE_SIZE:
  *      the size of event queue, default: 32
  * 
+ * CONFIG_SGL_EVENT_CLICK_INTERVAL:
+ *      The click interval, default: 10
+ * 
  * CONFIG_SGL_OBJ_SLOT_DYNAMIC
  *      If the object slot is dynamic, the object slot size will be dynamic allocated, otherwise, the object 
  *      slot size will be static allocated that you should define CONFIG_SGL_OBJ_NUM_MAX macro
  * 
  * CONFIG_SGL_OBJ_NUM_MAX:
  *      If CONFIG_SGL_OBJ_SLOT_DYNAMIC is 0 or not defined, you should define CONFIG_SGL_OBJ_NUM_MAX macro
+ * 
+ * CONFIG_SGL_PIXMAP_BILINEAR_INTERP:
+ *      If you want to use pixmap bilinear interpolation, please define this macro to 1
  * 
  * CONFIG_SGL_ANIMATION:
  *      If you want to use animation, please define this macro to 1
@@ -100,6 +109,10 @@ extern "C" {
 #define CONFIG_SGL_FBDEV_ROTATION                                  (0)
 #endif
 
+#ifndef CONFIG_SGL_FBDEV_RUNTIME_ROTATION
+#define CONFIG_SGL_FBDEV_RUNTIME_ROTATION                          (0)
+#endif
+
 #ifndef CONFIG_SGL_USE_FBDEV_VRAM
 #define CONFIG_SGL_USE_FBDEV_VRAM                                  (0)
 #endif
@@ -116,8 +129,16 @@ extern "C" {
 #define CONFIG_SGL_EVENT_QUEUE_SIZE                                (16)
 #endif
 
+#ifndef CONFIG_SGL_EVENT_CLICK_INTERVAL
+#define CONFIG_SGL_EVENT_CLICK_INTERVAL                            (10)
+#endif
+
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
 #define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (16)
+#endif
+
+#ifndef CONFIG_SGL_PIXMAP_BILINEAR_INTERP
+#define CONFIG_SGL_PIXMAP_BILINEAR_INTERP                          (0)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION

@@ -44,16 +44,26 @@
 static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    sgl_pos_t   align_pos;
+    sgl_pos_t align_pos;
+    sgl_rect_t fill_area;
+    sgl_draw_rect_t rect = {
+        .alpha = button->alpha,
+        .color = button->color,
+        .border = obj->border,
+        .border_color = button->border_color,
+        .pixmap = button->pixmap,
+        .radius = obj->radius,
+    };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_draw_rect(surf, &obj->area, &obj->coords, &button->rect);
+        sgl_draw_rect(surf, &obj->area, &obj->coords, &rect);
 
         if(button->text) {
             SGL_ASSERT(button->font != NULL);
-            align_pos = sgl_get_text_pos(&obj->coords, button->font, button->text, 0, (sgl_align_type_t)button->align);
+            fill_area = sgl_obj_get_fill_rect(obj);
+            align_pos = sgl_get_text_pos(&fill_area, button->font, button->text, 0, (sgl_align_type_t)button->align);
 
-            sgl_draw_string(surf, &obj->area, align_pos.x, align_pos.y, button->text, button->text_color, button->rect.alpha, button->font);
+            sgl_draw_string(surf, &obj->area, align_pos.x, align_pos.y, button->text, button->text_color, button->alpha, button->font);
         }
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
@@ -93,15 +103,14 @@ sgl_obj_t* sgl_button_create(sgl_obj_t* parent)
     sgl_obj_set_clickable(obj);
     sgl_obj_set_flexible(obj);
     sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
+    sgl_obj_set_radius(obj, SGL_THEME_RADIUS);
 
     obj->construct_fn = sgl_button_construct_cb;
 
-    button->rect.alpha = SGL_THEME_ALPHA;
-    button->rect.color = SGL_THEME_COLOR;
-    button->rect.border = SGL_THEME_BORDER_WIDTH;
-    button->rect.border_color = SGL_THEME_BORDER_COLOR;
-    button->rect.pixmap = NULL;
-    button->rect.radius = 0;
+    button->alpha = SGL_THEME_ALPHA;
+    button->color = SGL_THEME_COLOR;
+    button->border_color = SGL_THEME_BORDER_COLOR;
+    button->pixmap = NULL;
 
     button->text = NULL;
     button->text_color = SGL_THEME_TEXT_COLOR;

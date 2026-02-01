@@ -384,7 +384,7 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     const sgl_font_t *font = keyboard->font;
     int16_t btn_width[KEYBOARD_BTN_COLUMNS] = {0};
     int16_t btn_height[KEYBOARD_BTN_LINES] = {0};
-    sgl_rect_t btn = {0};
+    sgl_rect_t btn_coords = {0}, btn_area = {0};
 
     /* calculate button height */
     sgl_split_len(keybd_btn_height, KEYBOARD_BTN_LINES, body_h, keyboard->key_margin, btn_height);
@@ -392,18 +392,22 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_rect(surf, &obj->area, &obj->coords, &keyboard->body_desc);
 
-        btn.y1 = obj->coords.y1;
+        btn_coords.y1 = obj->coords.y1;
 
         for(int i = 0; i < KEYBOARD_BTN_LINES; i++) {
             sgl_split_len(keybd_btn_width[key_mode][i], keyboard_btn_count[key_mode][i], body_w, keyboard->key_margin, btn_width);
 
-            btn.x1 = obj->coords.x1;
-            btn.y1 += keyboard->key_margin;
-            btn.y2 = btn.y1 + btn_height[i] - 1;
+            btn_coords.x1 = obj->coords.x1;
+            btn_coords.y1 += keyboard->key_margin;
+            btn_coords.y2 = btn_coords.y1 + btn_height[i] - 1;
 
             for(int j = 0; j < keyboard_btn_count[key_mode][i]; j++) {
-                btn.x1 += keyboard->key_margin;
-                btn.x2 = btn.x1 + btn_width[j] - 1;
+                btn_coords.x1 += keyboard->key_margin;
+                btn_coords.x2 = btn_coords.x1 + btn_width[j] - 1;
+                btn_area = btn_coords;
+                if (!sgl_area_selfclip(&btn_area, &obj->area)) {
+                    sgl_area_init(&btn_area);
+                }
 
                 if(index == keyboard->key_index) {
                     keyboard->btn_desc.color = sgl_color_mixer(btn_color, keyboard->text_color, 128);
@@ -411,7 +415,7 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
                 else {
                     keyboard->btn_desc.color = btn_color;
                 }
-                sgl_draw_rect(surf, &btn, &btn, &keyboard->btn_desc);
+                sgl_draw_rect(surf, &btn_area, &btn_coords, &keyboard->btn_desc);
 
                 text = keyindex_is_icon(keyboard->key_mode, index);
                 if (text != NULL) {
@@ -421,15 +425,15 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
                     font = keyboard->font;
                     text = keybd_btn_map[keyboard->key_mode][index];
                 }
-                text_x = btn.x1 + (btn_width[j] - sgl_font_get_string_width(text, font)) / 2;
-                text_y = btn.y1 + (btn_height[i] - font->font_height) / 2;
-                sgl_draw_string(surf, &btn, text_x, text_y, text, keyboard->text_color, SGL_ALPHA_MAX, font);
+                text_x = btn_coords.x1 + (btn_width[j] - sgl_font_get_string_width(text, font)) / 2;
+                text_y = btn_coords.y1 + (btn_height[i] - font->font_height) / 2;
+                sgl_draw_string(surf, &btn_area, text_x, text_y, text, keyboard->text_color, SGL_ALPHA_MAX, font);
 
-                btn.x1 += btn_width[j];
+                btn_coords.x1 += btn_width[j];
                 index ++;
             }
 
-            btn.y1 += btn_height[i];
+            btn_coords.y1 += btn_height[i];
         }
 
         keyboard->btn_desc.color = btn_color;
@@ -531,9 +535,9 @@ sgl_obj_t* sgl_keyboard_create(sgl_obj_t* parent)
     keyboard->text_color = SGL_THEME_TEXT_COLOR;
 
     keyboard->btn_desc.alpha = SGL_THEME_ALPHA;
-    keyboard->btn_desc.color = SGL_THEME_COLOR;
-    keyboard->btn_desc.radius = 0;
-    keyboard->btn_desc.border = 1;
+    keyboard->btn_desc.color = sgl_color_mixer(SGL_THEME_BORDER_COLOR, SGL_THEME_COLOR, 64);
+    keyboard->btn_desc.radius = 4;
+    keyboard->btn_desc.border = 0;
     keyboard->btn_desc.border_color = SGL_THEME_BORDER_COLOR;
     keyboard->btn_desc.pixmap = NULL;
 

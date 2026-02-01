@@ -41,13 +41,11 @@
  */
 typedef struct sgl_led {
     sgl_obj_t       obj;
-    int16_t         cx;
-    int16_t         cy;
     uint8_t         alpha;
     bool            status;
     sgl_color_t     on_color;
     sgl_color_t     off_color;
-    sgl_color_t     border_color;
+    sgl_color_t     bg_color;
 
 }sgl_led_t;
 
@@ -87,15 +85,15 @@ static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
 }
 
 /**
- * @brief Set the border color of the led
+ * @brief Set the background color of the led
  * @param obj led object
- * @param color border color of the led
+ * @param color background color of the led
  * @return none
  */
-static inline void sgl_led_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+static inline void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_led_t *led = (sgl_led_t *)obj;
-    led->border_color = color;
+    led->bg_color = color;
     sgl_obj_set_dirty(obj);
 }
 

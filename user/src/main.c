@@ -178,7 +178,7 @@ int main(void)
 
     TIM2_Init();
 
-    sgl_boot_animation();
+    sgl_boot_logo();
 
     sgl_obj_t *rect = NULL;
     uint32_t count = 0;

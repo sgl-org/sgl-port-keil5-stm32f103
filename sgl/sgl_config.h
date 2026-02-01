@@ -14,8 +14,7 @@
 #define    CONFIG_SGL_DEBUG                   1
 #define    CONFIG_SGL_LOG_COLOR               1
 #define    CONFIG_SGL_LOG_LEVEL               0
-#define    CONFIG_SGL_BOOT_LOGO               0
-#define    CONFIG_SGL_BOOT_ANIMATION          1
+#define    CONFIG_SGL_BOOT_LOGO               1
 #define    CONFIG_SGL_HEAP_ALGO               lwmem
 #define    CONFIG_SGL_HEAP_MEMORY_SIZE        10240
 #define    CONFIG_SGL_FONT_SONG23             1

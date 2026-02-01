@@ -120,7 +120,8 @@ static inline void sgl_textbox_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_textbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
-    textbox->bg.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    textbox->bg.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

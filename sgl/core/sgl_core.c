@@ -33,8 +33,15 @@
 #include <sgl_theme.h>
 
 
-/* current sgl system variable */
+/* current sgl system variable, do not used it */
 sgl_system_t sgl_system;
+
+
+/**
+ * @brief Alpha blending table for 4 bpp and 2 bpp
+ */
+const uint8_t sgl_opa4_table[16] = {0,  17, 34,  51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255 };
+const uint8_t sgl_opa2_table[4]  = {0, 85, 170, 255};
 
 
 /**
@@ -73,6 +80,18 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
 
     sgl_system.fbdev.fbinfo = *fbinfo;
 
+    sgl_system.fbdev.surf.buffer = (sgl_color_t*)fbinfo->buffer[0];
+    sgl_system.fbdev.surf.x1 = 0;
+    sgl_system.fbdev.surf.y1 = 0;
+    sgl_system.fbdev.surf.x2 = fbinfo->xres - 1;
+    sgl_system.fbdev.surf.y2 = fbinfo->yres - 1;
+    sgl_system.fbdev.surf.size = fbinfo->buffer_size;
+    sgl_system.fbdev.surf.w = fbinfo->xres;
+
+    sgl_system.tick_ms = 0;
+    sgl_system.fbdev.fb_status = 3;
+    sgl_system.fbdev.fb_swap = 0;
+
     return 0;
 }
 
@@ -94,12 +113,15 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
     case SGL_PIXMAP_FMT_RLE_RGB332:
         bits = 1; break;
     case SGL_PIXMAP_FMT_RGB565:
+    case SGL_PIXMAP_FMT_ARGB4444:
     case SGL_PIXMAP_FMT_RLE_RGB565:
+    case SGL_PIXMAP_FMT_RLE_ARGB4444:
         bits = 2; break;
     case SGL_PIXMAP_FMT_RGB888:
+    case SGL_PIXMAP_FMT_ARGB8888:
     case SGL_PIXMAP_FMT_RLE_RGB888:
         bits = 3; break;
-    case SGL_PIXMAP_FMT_RLE_RGBA8888:
+    case SGL_PIXMAP_FMT_RLE_ARGB8888:
         bits = 4; break;
     default:
         SGL_LOG_ERROR("pixmap format error");
@@ -138,6 +160,7 @@ void sgl_obj_add_child(sgl_obj_t *parent, sgl_obj_t *obj)
  * @brief remove an object from its parent
  * @param obj object to remove
  * @return none
+ * @note This function will remove the object from its parent, of course, his children will also be removed
  */
 void sgl_obj_remove(sgl_obj_t *obj)
 {
@@ -177,7 +200,6 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
     if (obj->child == NULL) {
         return;
     }
-    obj->dirty = 1;
     stack[top++] = obj->child;
 
     while (top > 0) {
@@ -404,10 +426,11 @@ void sgl_obj_move_bottom(sgl_obj_t *obj)
 /**
  * @brief get fix radius of object
  * @param obj object
- * @return fix radius
+ * @param radius: radius that you want to set
+ * @return none
  * @note if radius is larger than object's width or height, fix radius will be returned
  */
-int16_t sgl_obj_fix_radius(sgl_obj_t *obj, size_t radius)
+void sgl_obj_set_radius(sgl_obj_t *obj, size_t radius)
 {
     int16_t w = (obj->coords.x2 - obj->coords.x1 + 1);
     int16_t h = (obj->coords.y2 - obj->coords.y1 + 1);
@@ -418,7 +441,6 @@ int16_t sgl_obj_fix_radius(sgl_obj_t *obj, size_t radius)
     }
 
     obj->radius = radius & 0xFFF;
-    return radius;
 }
 
 
@@ -539,13 +561,6 @@ static sgl_page_t* sgl_page_create(void)
         return NULL;
     }
 
-    page->surf.buffer = (sgl_color_t*)sgl_system.fbdev.fbinfo.buffer[0];
-    page->surf.x1 = 0;
-    page->surf.y1 = 0;
-    page->surf.x2 = sgl_system.fbdev.fbinfo.xres - 1;
-    page->surf.y2 = sgl_system.fbdev.fbinfo.yres - 1;
-    page->surf.size = sgl_system.fbdev.fbinfo.buffer_size;
-    page->surf.w = sgl_system.fbdev.fbinfo.xres;
     page->color = SGL_THEME_DESKTOP;
 
     obj->parent = obj;
@@ -557,8 +572,8 @@ static sgl_page_t* sgl_page_create(void)
     obj->coords = (sgl_area_t) {
         .x1 = 0,
         .y1 = 0,
-        .x2 = page->surf.x2,
-        .y2 = page->surf.y2,
+        .x2 = sgl_system.fbdev.fbinfo.xres - 1,
+        .y2 = sgl_system.fbdev.fbinfo.yres - 1,
     };
 
     obj->area = obj->coords;
@@ -566,8 +581,8 @@ static sgl_page_t* sgl_page_create(void)
     /* init child list */
     sgl_obj_node_init(&page->obj);
 
-    if (sgl_system.fbdev.page == NULL) {
-        sgl_system.fbdev.page = page;
+    if (sgl_system.fbdev.active == NULL) {
+        sgl_system.fbdev.active = &page->obj;
     }
 
     return page;
@@ -643,7 +658,7 @@ int sgl_init(void)
     sgl_mm_init(sgl_mem_pool, sizeof(sgl_mem_pool));
 
     /* initialize current context */
-    sgl_system.fbdev.page = NULL;
+    sgl_system.fbdev.active = NULL;
 
     /* initialize dirty area */
     sgl_dirty_area_init();
@@ -656,12 +671,15 @@ int sgl_init(void)
     }
 
     /* if the rotation is not 0 or 180, we need to alloc a buffer for rotation */
-#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+#if ((CONFIG_SGL_FBDEV_ROTATION != 0) || CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
     sgl_system.rotation = (sgl_color_t*)sgl_malloc(sgl_system.fbdev.fbinfo.buffer_size * sizeof(sgl_color_t));
     if (sgl_system.rotation == NULL) {
         SGL_LOG_ERROR("sgl_init: alloc rotation buffer failed");
         return -1;
     }
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+    sgl_system.angle = 0;
+#endif
 #endif
 
     /* create event queue */
@@ -677,15 +695,45 @@ int sgl_init(void)
 void sgl_screen_load(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_system.fbdev.page = (sgl_page_t*)obj;
-
-    /* initilize framebuffer swap */
-    sgl_system.fbdev.fb_swap = 0;
+    sgl_system.fbdev.active = obj;
 
     /* initialize dirty area */
     sgl_dirty_area_init();
     sgl_obj_set_dirty(obj);
 }
+
+
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+/**
+ * @brief set framebuffer device rotation angle
+ * @param angle [in] rotation angle, that is 0, 90, 180, 270
+ * @return none
+ * @note Rotation angle must be 0, 90, 180, 270
+ */
+void sgl_fbdev_set_angle(uint16_t angle)
+{
+    if (angle == sgl_system.angle) {
+        return;
+    }
+
+    const uint8_t cur_status = (sgl_system.angle == 0 || sgl_system.angle == 180) ? 0 : 
+                               (sgl_system.angle == 90 || sgl_system.angle == 270) ? 1 : 2;
+
+    const uint8_t new_status = (angle == 0 || angle == 180) ? 0 : 
+                               (angle == 90 || angle == 270) ? 1 : 2;
+
+    if (cur_status == 2 || new_status == 2) {
+        SGL_LOG_WARN("sgl_fbdev_set_angle: invalid angle");
+        return;
+    }
+
+    if (cur_status != new_status) {
+        sgl_swap(&sgl_system.fbdev.fbinfo.xres, &sgl_system.fbdev.fbinfo.yres);
+    }
+
+    sgl_system.angle = angle;
+}
+#endif // !CONFIG_SGL_FBDEV_RUNTIME_ROTATION
 
 
 /**
@@ -865,7 +913,7 @@ int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent)
  * @brief  free an object
  * @param  obj: object to free
  * @retval none
- * @note this function will free all the children of the object
+ * @note this function will free all the itself and children of the object
  */
 void sgl_obj_free(sgl_obj_t *obj)
 {
@@ -903,11 +951,11 @@ void sgl_obj_delete(sgl_obj_t *obj)
 {
     if (obj == NULL || obj == sgl_screen_act()) {
         obj = sgl_screen_act();
-        sgl_dirty_area_push(&obj->area);
         if (obj->child) {
             sgl_obj_free(obj->child);
         }
         sgl_obj_node_init(obj);
+        sgl_obj_set_dirty(obj);
         return;
     }
     else if (obj->page == 1) {
@@ -916,7 +964,6 @@ void sgl_obj_delete(sgl_obj_t *obj)
     }
 
     sgl_obj_set_destroyed(obj);
-    sgl_obj_set_dirty(obj);
 }
 
 
@@ -1407,6 +1454,7 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             /* update obj area */
             if (unlikely(!sgl_area_clip(&fill_area, &obj->coords, &obj->area))) {
                 sgl_area_init(&obj->area);
+                sgl_obj_clear_dirty(obj);
                 continue;
             }
 
@@ -1432,14 +1480,19 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
  */
 static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
 {
-    sgl_surf_t *surf = &fbdev->page->surf;
-    sgl_obj_t  *head = &fbdev->page->obj;
+    sgl_surf_t *surf = &fbdev->surf;
+    sgl_obj_t  *head = fbdev->active;
     sgl_area_t *dirty = NULL;
 
     /* dirty area number must less than SGL_DIRTY_AREA_MAX */
     for (int i = 0; i < fbdev->dirty_num; i++) {
         dirty = &fbdev->dirty[i];
         surf->dirty = dirty;
+
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+        sgl_area_t screen = { .x1 = 0, .y1 = 0, .x2 = SGL_SCREEN_WIDTH - 1, .y2 = SGL_SCREEN_HEIGHT - 1 };
+        sgl_area_selfclip(dirty, &screen);
+#endif
 
         /* check dirty area, ensure it is valid */
         SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
@@ -1459,18 +1512,17 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
 
         while (surf->y1 <= dirty->y2) {
             draw_h = sgl_min(dirty->y2 - surf->y1 + 1, surf->h);
-
             surf->y2 = surf->y1 + draw_h - 1;
-            fbdev->fb_status = (fbdev->fb_status & (1 << fbdev->fb_swap));
 
-            draw_obj_slice(head, surf);
-            surf->y1 += draw_h;
-
-            /* wait flush ready */
+            /* wait current framebuffer for ready */
             while (sgl_fbdev_flush_wait_ready(fbdev));
 
-            /* swap the double buffer */
-            sgl_surf_buffer_swap(surf);
+            /* reset current framebuffer ready flag */
+            fbdev->fb_status = (fbdev->fb_status & (2 - fbdev->fb_swap));
+
+            /* draw object slice until the dirty area is finished */
+            draw_obj_slice(head, surf);
+            surf->y1 += draw_h;
         }
 #else
         /* check dirty area, ensure it is valid */
@@ -1478,7 +1530,6 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
 
         SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", fbdev->fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
         draw_obj_slice(head, surf);
-        sgl_surf_buffer_swap(surf);
 #endif
     }
     /* clear dirty area */
@@ -1503,7 +1554,7 @@ void sgl_task_handle_sync(void)
     sgl_tick_reset();
 
     /* foreach all object tree and calculate dirty area */
-    sgl_dirty_area_calculate(&sgl_system.fbdev.page->obj);
+    sgl_dirty_area_calculate(sgl_system.fbdev.active);
 
     /* draw all object into screen */
     sgl_draw_task(&sgl_system.fbdev);

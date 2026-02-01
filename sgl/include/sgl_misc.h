@@ -34,18 +34,17 @@ extern "C" {
 #include <sgl_list.h>
 #include <sgl_types.h>
 
+#if (CONFIG_SGL_BOOT_LOGO)
 
-#if (CONFIG_SGL_BOOT_ANIMATION)
 /**
- * @brief sgl boot animation
+ * @brief to show the sgl logo after sgl init
+ * @param none
  * @return none
- * @note this function will block the task, it should be called at before of sgl_task_handle and at after of sgl_init()
+ * @note: you can call this function in your main function to show the sgl logo
  */
-void sgl_boot_animation(void);
+void sgl_boot_logo(void);
 
-
-#endif // ! CONFIG_SGL_BOOT_ANIMATION
-
+#endif // ! CONFIG_SGL_BOOT_LOGO
 
 #ifdef __cplusplus
 } /*extern "C"*/

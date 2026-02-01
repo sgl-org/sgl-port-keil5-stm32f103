@@ -50,6 +50,10 @@ void sgl_draw_fill_ring(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t 
     sgl_color_t *buf = NULL, *blend = NULL;
     sgl_area_t clip;
 
+    if (unlikely(alpha == SGL_ALPHA_MIN)) {
+        return;
+    }
+
     if (!sgl_surf_clip(surf, area, &clip)) {
         return;
     }

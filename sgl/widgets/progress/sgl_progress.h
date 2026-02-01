@@ -121,7 +121,8 @@ static inline void sgl_progress_set_fill_alpha(sgl_obj_t *obj, uint8_t alpha)
 static inline void sgl_progress_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_progress_t *progress = (sgl_progress_t *)obj;
-    progress->body.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    progress->body.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

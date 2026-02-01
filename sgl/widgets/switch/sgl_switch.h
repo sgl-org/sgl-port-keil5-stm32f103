@@ -43,11 +43,13 @@
  */
 typedef struct sgl_switch {
     sgl_obj_t         obj;
-    sgl_draw_rect_t   bg_desc;
+    const sgl_pixmap_t *pixmap;
+    sgl_color_t       border_color;
     sgl_color_t       color;
     sgl_color_t       bg_color;
     sgl_color_t       knob_color;
     bool              status;
+    uint8_t           alpha;
 }sgl_switch_t;
 
 
@@ -107,7 +109,7 @@ static inline void sgl_switch_set_knob_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_switch_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
     sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
-    switch_obj->bg_desc.alpha = alpha;
+    switch_obj->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
 
@@ -119,8 +121,7 @@ static inline void sgl_switch_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_switch_set_radius(sgl_obj_t *obj, uint16_t radius)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
-    switch_obj->bg_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 
@@ -133,7 +134,7 @@ static inline void sgl_switch_set_radius(sgl_obj_t *obj, uint16_t radius)
 static inline void sgl_switch_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
-    switch_obj->bg_desc.border_color = color;
+    switch_obj->border_color = color;
     sgl_obj_set_dirty(obj);
 }
 
@@ -145,8 +146,6 @@ static inline void sgl_switch_set_border_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_switch_set_border_width(sgl_obj_t *obj, int16_t width)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
-    switch_obj->bg_desc.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }

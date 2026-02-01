@@ -142,15 +142,15 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
+            sgl_obj_set_destroyed(obj);
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
+            sgl_obj_set_destroyed(obj);
         }
         else {
-            sgl_obj_clear_dirty(obj);
             return;
         }
-        sgl_obj_set_dirty(obj);
     }
 }
 

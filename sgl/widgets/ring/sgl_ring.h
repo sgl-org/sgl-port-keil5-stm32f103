@@ -42,8 +42,6 @@
  */
 typedef struct sgl_ring {
     sgl_obj_t        obj;
-    int16_t          cx;
-    int16_t          cy;
     int16_t          radius_in;
     int16_t          radius_out;
     sgl_color_t      color;
@@ -97,24 +95,9 @@ static inline void sgl_ring_set_radius(sgl_obj_t *obj, uint16_t radius_in, uint1
 {
     sgl_ring_t *ring = (sgl_ring_t*)obj;
     ring->radius_in = radius_in;
-    ring->radius_out = sgl_obj_fix_radius(obj, radius_out);
+    sgl_obj_set_radius(obj, radius_out);
+    ring->radius_out = obj->radius;
     sgl_obj_set_dirty(obj);
 }
-
-/**
- * @brief Set the ring center
- * @param obj The ring object
- * @param cx The ring center x
- * @param cy The ring center y
- * @return none
- */
-static inline void sgl_ring_set_center(sgl_obj_t *obj, int16_t cx, int16_t cy)
-{
-    sgl_ring_t *ring = (sgl_ring_t*)obj;
-    ring->cx = cx;
-    ring->cy = cy;
-    sgl_obj_set_dirty(obj);
-}
-
 
 #endif // !__SGL_RING_H__

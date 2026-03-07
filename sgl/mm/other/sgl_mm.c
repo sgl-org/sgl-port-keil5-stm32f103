@@ -1,4 +1,4 @@
-/* source/mm/lwmem/mem.c
+/* source/mm/other/sgl_mm.c
  *
  * MIT License
  *

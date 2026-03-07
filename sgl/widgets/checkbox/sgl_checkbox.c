@@ -110,7 +110,7 @@ static sgl_icon_pixmap_t checked_icon = {
  */
 static void sgl_checkbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t*)(obj);
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     int text_x = 0, icon_y = 0;
     sgl_pos_t align_pos;
     
@@ -184,5 +184,7 @@ sgl_obj_t* sgl_checkbox_create(sgl_obj_t* parent)
 
     sgl_obj_set_clickable(obj);
 
+    checkbox->font = sgl_get_system_font();
+    checkbox->text = " ";
     return obj;
 }

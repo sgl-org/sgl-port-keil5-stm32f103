@@ -54,7 +54,7 @@ static const sgl_icon_pixmap_t dropdown_icon = {
 
 static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_t *dropdown = sgl_container_of(obj, sgl_dropdown_t, obj);
     int16_t icon_h = dropdown->option_h;
     int16_t pos_x = 0, pos_y = 0, icon_y = 0;
     sgl_dropdown_option_t *option = dropdown->head;
@@ -85,10 +85,10 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     if (evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_rect(surf, &obj->area, &body_area, &dropdown->body_desc);
         if (dropdown->is_open) {
-            sgl_draw_icon(surf, &icon_area, icon_area.x1, icon_y + 2, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
+            sgl_draw_icon(surf, &obj->area, icon_area.x1, icon_y + 2, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
         }
         else {
-            sgl_draw_icon(surf, &icon_area, icon_area.x1, icon_y, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
+            sgl_draw_icon(surf, &obj->area, icon_area.x1, icon_y, dropdown->text_color, dropdown->body_desc.alpha, &dropdown_icon);
         }
 
         for (int i = 0; option != NULL; i++) {
@@ -125,7 +125,7 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     else if (evt->type == SGL_EVENT_MOVE_DOWN) {
 
     }
-    else if (evt->type == SGL_EVENT_PRESSED) {
+    else if (evt->type == SGL_EVENT_PRESSED || evt->type == SGL_EVENT_CLICKED) {
         dropdown->expand_h = dropdown->font->font_height * sgl_min(10, dropdown->option_num);
 
         if (dropdown->is_open) {
@@ -181,6 +181,7 @@ sgl_obj_t* sgl_dropdown_create(sgl_obj_t* parent)
     dropdown->body_desc.border = 1;
     dropdown->body_desc.border_color = SGL_THEME_BORDER_COLOR;
 
+    dropdown->font = sgl_get_system_font();
     dropdown->head = NULL;
     dropdown->is_open = false;
 

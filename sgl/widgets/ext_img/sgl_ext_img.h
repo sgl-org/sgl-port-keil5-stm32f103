@@ -107,6 +107,8 @@
  *          sgl_ext_img_set_read_ops(ext_img, flash_port_read_data_from_flash);
  */
 
+ /* TODO: add ext img buffer size config */
+#define SGL_EXT_IMG_BUFFER_SIZE   (CONFIG_SGL_EXT_IMG_BUFFER)
 
 /**
  * @brief sgl ext_img struct
@@ -123,12 +125,13 @@ typedef struct sgl_ext_img {
     uint8_t         pixmap_num;
     /* RLE compress context */
     sgl_color_t     color;
-    uint16_t        remainder;
+    uint8_t         remainder;
+    uint8_t         pix_alpha;
     uint32_t        index;
-#if CONFIG_SGL_EXT_IMG_USE_BUFFER
-    uint8_t         flash_buffer[512];
+#if CONFIG_SGL_EXT_IMG_BUFFER
+    uint8_t         flash_buffer[SGL_EXT_IMG_BUFFER_SIZE];
 #endif
-}sgl_ext_img_t;
+} sgl_ext_img_t;
 
 /**
  * @brief create an ext_img object
@@ -198,7 +201,7 @@ static inline void sgl_ext_img_set_pixmap_num(sgl_obj_t *obj, uint8_t num, bool 
 static inline void sgl_ext_img_set_pixmap_next(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    sgl_ext_img_t *ext_img = sgl_container_of(obj, sgl_ext_img_t, obj);
     uint32_t pixmap_idx = ext_img->pixmap_idx + 1;
     ext_img->pixmap_idx = pixmap_idx >= ext_img->pixmap_num ? 0 : pixmap_idx;
     sgl_obj_set_dirty(obj);
@@ -213,7 +216,7 @@ static inline void sgl_ext_img_set_pixmap_next(sgl_obj_t *obj)
 static inline void sgl_ext_img_set_pixmap_index(sgl_obj_t *obj, uint8_t index)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    sgl_ext_img_t *ext_img = sgl_container_of(obj, sgl_ext_img_t, obj);
     ext_img->pixmap_idx = sgl_min(index, ext_img->pixmap_num - 1);
     sgl_obj_set_dirty(obj);
 }

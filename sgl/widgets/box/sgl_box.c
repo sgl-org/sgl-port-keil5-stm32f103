@@ -1,4 +1,3 @@
-//sgl_box.c
 /* source/widgets/sgl_box.c
  *
  * MIT License
@@ -37,7 +36,7 @@
 
 static void sgl_box_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     int16_t height = obj->coords.y2 - obj->coords.y1 - 2 * box->bg.radius;
     int16_t width = obj->coords.x2 - obj->coords.x1 - 2 * box->bg.radius;
     int16_t scroll_height = sgl_max(height / 8, SGL_BOX_SCROLL_WIDTH);

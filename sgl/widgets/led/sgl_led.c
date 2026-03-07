@@ -35,7 +35,7 @@
 
 static void sgl_led_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_led_t *led = (sgl_led_t*)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     int16_t cx = 0, cy = 0;
     sgl_color_t color = led->status ? led->on_color : led->off_color;
     sgl_color_t *buf = NULL, *blend = NULL;

@@ -36,7 +36,7 @@
 
 static int16_t textbox_scroll_get_pos(sgl_obj_t* obj, int16_t scroll_h)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     int16_t height = obj->coords.y2 - obj->coords.y1 - 2 * textbox->bg.radius;
     return (-textbox->y_offset) * (height + scroll_h) / (textbox->text_height - height);
 }
@@ -44,7 +44,7 @@ static int16_t textbox_scroll_get_pos(sgl_obj_t* obj, int16_t scroll_h)
 
 static void sgl_textbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     int16_t height = obj->coords.y2 - obj->coords.y1 - 2 * textbox->bg.radius;
     int16_t width = obj->coords.x2 - obj->coords.x1 - 2 * textbox->bg.radius;
     int16_t scroll_height = sgl_max(height / 8, SGL_TEXTBOX_SCROLL_WIDTH);
@@ -139,6 +139,7 @@ sgl_obj_t* sgl_textbox_create(sgl_obj_t* parent)
     textbox->bg.radius = 10;
     textbox->bg.border = 1;
     textbox->bg.border_color = SGL_THEME_BORDER_COLOR;
+    textbox->font = sgl_get_system_font();
 
     textbox->scroll.alpha = SGL_THEME_ALPHA;
     textbox->scroll.color = SGL_THEME_SCROLL_FG_COLOR;

@@ -1,4 +1,4 @@
-/* source/mm/tlfs/mem.c
+/* source/mm/tlsf/sgl_mm.c
  *
  * MIT License
  *

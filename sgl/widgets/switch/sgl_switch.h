@@ -69,7 +69,7 @@ sgl_obj_t* sgl_switch_create(sgl_obj_t* parent);
  */
 static inline void sgl_switch_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     switch_obj->color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -82,7 +82,7 @@ static inline void sgl_switch_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_switch_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     switch_obj->bg_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -95,7 +95,7 @@ static inline void sgl_switch_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_switch_set_knob_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     switch_obj->knob_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -108,7 +108,7 @@ static inline void sgl_switch_set_knob_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_switch_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     switch_obj->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -133,7 +133,7 @@ static inline void sgl_switch_set_radius(sgl_obj_t *obj, uint16_t radius)
  */
 static inline void sgl_switch_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     switch_obj->border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -158,7 +158,7 @@ static inline void sgl_switch_set_border_width(sgl_obj_t *obj, int16_t width)
  */
 static inline void sgl_switch_set_status(sgl_obj_t *obj, bool status)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     switch_obj->status = status;
     sgl_obj_set_dirty(obj);
 }
@@ -170,7 +170,7 @@ static inline void sgl_switch_set_status(sgl_obj_t *obj, bool status)
  */
 static inline bool sgl_switch_get_status(sgl_obj_t *obj)
 {
-    sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
+    sgl_switch_t *switch_obj = sgl_container_of(obj, sgl_switch_t, obj);
     return switch_obj->status;
 }
 

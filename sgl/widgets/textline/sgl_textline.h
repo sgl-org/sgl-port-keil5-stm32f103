@@ -67,7 +67,7 @@ sgl_obj_t* sgl_textline_create(sgl_obj_t* parent);
  */
 static inline void sgl_textline_set_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -80,7 +80,7 @@ static inline void sgl_textline_set_text(sgl_obj_t *obj, const char *text)
  */
 static inline void sgl_textline_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -93,7 +93,7 @@ static inline void sgl_textline_set_text_font(sgl_obj_t *obj, const sgl_font_t *
  */
 static inline void sgl_textline_set_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -106,7 +106,7 @@ static inline void sgl_textline_set_text_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_textline_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->bg_color = color;
     textline->bg_flag = true;
     sgl_obj_set_dirty(obj);
@@ -120,7 +120,7 @@ static inline void sgl_textline_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_textline_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     sgl_obj_set_radius(obj, radius);
     textline->obj.radius = obj->radius;
     sgl_obj_set_dirty(obj);
@@ -134,7 +134,7 @@ static inline void sgl_textline_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_textline_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -147,7 +147,7 @@ static inline void sgl_textline_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_textline_set_edge_margin(sgl_obj_t *obj, uint8_t margin)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->edge_margin = margin;
     sgl_obj_set_dirty(obj);
 }
@@ -160,7 +160,7 @@ static inline void sgl_textline_set_edge_margin(sgl_obj_t *obj, uint8_t margin)
  */
 static inline void sgl_textline_set_line_margin(sgl_obj_t *obj, uint8_t margin)
 {
-    sgl_textline_t *textline = (sgl_textline_t *)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     textline->line_margin = margin;
     sgl_obj_set_dirty(obj);
 }

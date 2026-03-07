@@ -42,7 +42,7 @@
  */
 static void sgl_circle_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_circle_t *circle = (sgl_circle_t*)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         circle->desc.cx = (circle->obj.coords.x1 + circle->obj.coords.x2) / 2;

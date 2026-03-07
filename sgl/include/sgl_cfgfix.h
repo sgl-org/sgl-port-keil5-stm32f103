@@ -93,6 +93,9 @@ extern "C" {
  * CONFIG_SGL_FONT_SMALL_TABLE:
  *      If you want to use font small table, please define this macro to 1
  * 
+ * CONFIG_SGL_LABEL_ROTATION:
+ *      If you want to use label rotation, please define this macro to 1
+ * 
  * CONFIG_SGL_FONT_SONG23:
  *      If you want to use font song23, please define this macro to 1
  * 
@@ -177,6 +180,10 @@ extern "C" {
 
 #ifndef CONFIG_SGL_FONT_SMALL_TABLE
 #define CONFIG_SGL_FONT_SMALL_TABLE                                (0)
+#endif
+
+#ifndef CONFIG_SGL_LABEL_ROTATION
+#define CONFIG_SGL_LABEL_ROTATION                                  (0)
 #endif
 
 #ifndef CONFIG_SGL_FONT_SONG23

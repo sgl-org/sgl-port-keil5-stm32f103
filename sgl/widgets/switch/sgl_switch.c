@@ -35,7 +35,7 @@
 
 static void sgl_switch_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_switch_t *p_switch = (sgl_switch_t*)(obj);
+    sgl_switch_t *p_switch = sgl_container_of(obj, sgl_switch_t, obj);
     int16_t width = obj->coords.y2 - obj->coords.y1 - 2 * obj->border;
     sgl_rect_t knob_rect = { 
         .y1 = obj->coords.y1 + obj->border,

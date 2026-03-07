@@ -35,7 +35,7 @@
 
 static void sgl_2dball_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_2dball_t *ball = (sgl_2dball_t*)obj;
+    sgl_2dball_t *ball = sgl_container_of(obj, sgl_2dball_t, obj);
     int16_t cx = 0, cy = 0;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {

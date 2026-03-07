@@ -60,16 +60,22 @@ typedef struct sgl_draw_rect {
 
 /**
  * @brief line draw description
- * @start: start point
- * @end: end point
- * @color: line color
- * @width: line width
+ * @x1: x1 coordinate
+ * @y1: y1 coordinate
+ * @x2: x2 coordinate
+ * @y2: y2 coordinate
+ * @color: color
  * @alpha: alpha
+ * @width: width of line
  */
 typedef struct sgl_draw_line {
+    int16_t          x1;
+    int16_t          y1;
+    int16_t          x2;
+    int16_t          y2;
     sgl_color_t      color;
-    uint8_t          width;
     uint8_t          alpha;
+    uint8_t          width;
 } sgl_draw_line_t;
 
 
@@ -458,11 +464,10 @@ void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int1
  * @brief draw a line
  * @param surf surface
  * @param area area that contains the line
- * @param coords line coords
  * @param desc line description
  * @return none
  */
-void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *coords, sgl_draw_line_t *desc);
+void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_line_t *desc);
 
 
 /**
@@ -473,6 +478,32 @@ void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *coords, sgl_d
  * @return none
  */
 void sgl_draw_fill_arc(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_arc_t *desc);
+
+
+/**
+ * @brief calculate a point color by bilinear interpolate
+ * @param buffer point to image pixmap start buffer
+ * @param w width of buffer
+ * @param h height of buffer
+ * @param fx x coordinate of point
+ * @param fy y coordinate of point
+ * @return point color
+ */
+sgl_color_t sgl_draw_biln_color(const sgl_color_t *buffer, int16_t w, int16_t h, int32_t fx, int32_t fy);
+
+
+/**
+ * @brief transform a surface
+ * @param dst destination surface
+ * @param src source surface
+ * @param area area of surface
+ * @param x x coordinate of surface
+ * @param y y coordinate of surface
+ * @param rotation rotation angle
+ * @return none
+ * @note This function has implemented angle normalization to the range of 0 to 360 degrees.
+ */
+void sgl_draw_xform_surf(sgl_surf_t *dst, sgl_surf_t *src, sgl_area_t *area, int16_t x, int16_t y, int16_t rotation);
 
 
 #ifdef __cplusplus

@@ -31,6 +31,7 @@
 #include <sgl_draw.h>
 #include <sgl_font.h>
 #include <sgl_theme.h>
+#include <sgl_misc.h>
 
 
 /* current sgl system variable, do not used it */
@@ -97,37 +98,34 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits of per pixel
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap)
 {
+    static const uint8_t s_bytes_per_pixel[] = {
+        [SGL_PIXMAP_FMT_NONE]         = sizeof(sgl_color_t),
+        [SGL_PIXMAP_FMT_RGB332]       = 1,
+        [SGL_PIXMAP_FMT_ARGB2222]     = 1,
+        [SGL_PIXMAP_FMT_RLE_RGB332]   = 1,
+        [SGL_PIXMAP_FMT_RLE_ARGB2222] = 1,
+        [SGL_PIXMAP_FMT_RGB565]       = 2,
+        [SGL_PIXMAP_FMT_ARGB4444]     = 2,
+        [SGL_PIXMAP_FMT_RLE_RGB565]   = 2,
+        [SGL_PIXMAP_FMT_RLE_ARGB4444] = 2,
+        [SGL_PIXMAP_FMT_RGB888]       = 3,
+        [SGL_PIXMAP_FMT_RLE_RGB888]   = 3,
+        [SGL_PIXMAP_FMT_ARGB8888]     = 4,
+        [SGL_PIXMAP_FMT_RLE_ARGB8888] = 4,
+    };
+
     SGL_ASSERT(pixmap != NULL);
-    uint8_t bits = 0;
-    switch (pixmap->format)
-    {
-    case SGL_PIXMAP_FMT_NONE:
-        bits = sizeof(sgl_color_t); break;
-    case SGL_PIXMAP_FMT_RGB332:
-    case SGL_PIXMAP_FMT_RLE_RGB332:
-        bits = 1; break;
-    case SGL_PIXMAP_FMT_RGB565:
-    case SGL_PIXMAP_FMT_ARGB4444:
-    case SGL_PIXMAP_FMT_RLE_RGB565:
-    case SGL_PIXMAP_FMT_RLE_ARGB4444:
-        bits = 2; break;
-    case SGL_PIXMAP_FMT_RGB888:
-    case SGL_PIXMAP_FMT_ARGB8888:
-    case SGL_PIXMAP_FMT_RLE_RGB888:
-        bits = 3; break;
-    case SGL_PIXMAP_FMT_RLE_ARGB8888:
-        bits = 4; break;
-    default:
+    if (pixmap->format >= sizeof(s_bytes_per_pixel)) {
         SGL_LOG_ERROR("pixmap format error");
-        break;
+        return 0;
     }
-    return bits;
+    return s_bytes_per_pixel[pixmap->format];
 }
 
 
@@ -313,34 +311,32 @@ void sgl_obj_move_down(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     sgl_obj_t *parent = obj->parent;
+    sgl_obj_t *prev_prev = NULL;
     sgl_obj_t *prev = NULL;
-    sgl_obj_t *gprev = NULL;
 
-    /* if the object is the first child, do not move it */
-    if (parent->child == obj || obj->sibling == NULL) {
-        return;
-    }
-    else if (parent->child->sibling == obj) {
-        parent->child->sibling = obj->sibling;
-        obj->sibling = parent->child;
-        parent->child = obj;
-        /* mark object as dirty */
-        sgl_obj_set_dirty(obj);
+    if (parent->child == obj) {
         return;
     }
 
-    /* move the object to its prev sibling */
-    sgl_obj_for_each_child(gprev, parent) {
-        prev = gprev->sibling;
-
+    // Find the previous sibling node (prev) and the node before it (prev_prev)
+    sgl_obj_for_each_child(prev, parent) {
         if (prev->sibling == obj) {
-            prev->sibling = obj->sibling;
-            gprev->sibling = obj;
-            obj->sibling = prev;
-            /* mark object as dirty */
-            sgl_obj_set_dirty(obj);
-            return;
+            break;
         }
+        prev_prev = prev;
+    }
+
+    if (prev != NULL) {
+        if (prev_prev != NULL) {
+            prev_prev->sibling = obj;
+        }
+        else {
+            parent->child = obj;
+        }
+
+        prev->sibling = obj->sibling;
+        obj->sibling = prev;
+        sgl_obj_set_dirty(obj);
     }
 }
 
@@ -681,9 +677,17 @@ int sgl_init(void)
     sgl_system.angle = 0;
 #endif
 #endif
-
     /* create event queue */
-    return sgl_event_queue_init();
+    if (sgl_event_queue_init()) {
+        SGL_LOG_ERROR("sgl_init: event queue init failed");
+        sgl_free(obj);
+        return -1;
+    }
+
+#if (CONFIG_SGL_BOOT_LOGO)
+    sgl_boot_logo();
+#endif
+    return 0;
 }
 
 
@@ -732,6 +736,7 @@ void sgl_fbdev_set_angle(uint16_t angle)
     }
 
     sgl_system.angle = angle;
+    sgl_obj_set_dirty(sgl_system.fbdev.active);
 }
 #endif // !CONFIG_SGL_FBDEV_RUNTIME_ROTATION
 
@@ -940,6 +945,35 @@ void sgl_obj_free(sgl_obj_t *obj)
 
 
 /**
+ * @brief  Clear all dirty areas of the object and its children.
+ * @param[in] obj  The object to clear.
+ * @return  None
+ * @note   This function is used to clear all dirty areas of the object and its children.
+ */
+void sgl_obj_clear_all_dirty(sgl_obj_t *obj)
+{
+    SGL_ASSERT(obj != NULL);
+	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    int top = 0;
+    stack[top++] = obj;
+
+    while (top > 0) {
+		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+		obj = stack[--top];
+        obj->dirty = 0;
+
+		if (obj->sibling != NULL) {
+			stack[top++] = obj->sibling;
+		}
+
+		if (obj->child != NULL) {
+			stack[top++] = obj->child;
+		}
+    }
+}
+
+
+/**
  * @brief delete object
  * @param obj point to object
  * @return none
@@ -975,30 +1009,24 @@ void sgl_obj_delete(sgl_obj_t *obj)
  */
 uint32_t sgl_utf8_to_unicode(const char *utf8_str, uint32_t *p_unicode_buffer)
 {
-    int bytes = 0;
-    if (((uint8_t)(*utf8_str)) < 0x80) { // 1-byte/7-bit ASCII
-        bytes = 1;
-        *p_unicode_buffer = utf8_str[0];
+    uint8_t* ptr = (uint8_t*)utf8_str;
+    if ((*ptr) < 0x80) { // 1-byte/7-bit ASCII
+        *p_unicode_buffer = ptr[0];
+        return 1;
     }
-    else if ((((uint8_t)(*utf8_str)) & 0xE0) == 0xC0) { // 2-byte
-        bytes = 2;
-        *p_unicode_buffer = (utf8_str[0] & 0x1F) << 6;
-        *p_unicode_buffer |= (utf8_str[1] & 0x3F);
+    else if (((*ptr) & 0xE0) == 0xC0) { // 2-byte
+        *p_unicode_buffer = (ptr[0] & 0x1F) << 6 | (ptr[1] & 0x3F);
+        return 2;
     }
-    else if ((((uint8_t)(*utf8_str)) & 0xF0) == 0xE0) { // 3-byte
-        bytes = 3;
-        *p_unicode_buffer = (utf8_str[0] & 0x0F) << 12;
-        *p_unicode_buffer |= (utf8_str[1] & 0x3F) << 6;
-        *p_unicode_buffer |= (utf8_str[2] & 0x3F);
+    else if (((*ptr) & 0xF0) == 0xE0) { // 3-byte
+        *p_unicode_buffer = (ptr[0] & 0x0F) << 12 | (ptr[1] & 0x3F) << 6 | (ptr[2] & 0x3F);
+        return 3;
     }
-    else if ((((uint8_t)(*utf8_str)) & 0xF8) == 0xF0) { // 4-byte
-        bytes = 4;
-        *p_unicode_buffer = (utf8_str[0] & 0x07) << 18;
-        *p_unicode_buffer |= (utf8_str[2] & 0x3F) << 6;
-        *p_unicode_buffer |= (utf8_str[1] & 0x3F) << 12;
-        *p_unicode_buffer |= (utf8_str[3] & 0x3F);
+    else if (((*ptr) & 0xF8) == 0xF0) { // 4-byte
+        *p_unicode_buffer = (ptr[0] & 0x07) << 18 | (ptr[1] & 0x3F) << 12 | (ptr[2] & 0x3F) << 6  | (ptr[3] & 0x3F);
+        return 4;
     }
-    return bytes;
+    return 0;
 }
 
 
@@ -1421,6 +1449,14 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
         if (unlikely(sgl_obj_is_destroyed(obj))) {
             /* merge destroy area */
             sgl_dirty_area_push(&obj->area);
+
+            sgl_event_t evt = {
+                .type = SGL_EVENT_DESTROYED,
+            };
+
+            /* check construct function */
+            SGL_ASSERT(obj->construct_fn != NULL);
+            obj->construct_fn(NULL, obj, &evt);
 
             /* remove obj from parent */
             sgl_obj_remove(obj);

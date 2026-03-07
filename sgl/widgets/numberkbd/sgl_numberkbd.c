@@ -114,7 +114,7 @@ static sgl_icon_pixmap_t backspace_icon = {
  */
 static void sgl_numberkbd_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t*)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     int16_t body_w = obj->coords.x2 - obj->coords.x1 + 1;
     int16_t body_h = obj->coords.y2 - obj->coords.y1 + 1;
     sgl_color_t btn_color = numberkbd->btn_desc.color;
@@ -270,6 +270,8 @@ sgl_obj_t* sgl_numberkbd_create(sgl_obj_t* parent)
     numberkbd->btn_desc.border = 1;
     numberkbd->btn_desc.border_color = SGL_THEME_BORDER_COLOR;
     numberkbd->btn_desc.pixmap = NULL;
+
+    numberkbd->font = sgl_get_system_font();
 
     return obj;
 }

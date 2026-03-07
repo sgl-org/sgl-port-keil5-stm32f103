@@ -41,48 +41,61 @@ static inline void ext_img_rle_init(sgl_ext_img_t *img)
 
 static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, sgl_area_t *area, sgl_color_t *out)
 {
-    uint8_t tmp_buf[8] = {0};
-    const uint8_t *bitmap = img->pixmap[img->pixmap_idx].bitmap.array;
+    uint8_t tmp_buf[8];
+    uint8_t* read_ptr = NULL;
+    uint8_t* start_ptr = (uint8_t*)img->pixmap[img->pixmap_idx].bitmap.array;
+    uintptr_t start_addr = img->pixmap[img->pixmap_idx].bitmap.addr;
     uint8_t format = img->pixmap->format;
+    uint32_t pix_value;
 
     for (int i = coords->x1; i <= coords->x2; i++) {
-
         if (img->remainder == 0) {
             if (img->read != NULL) {
-                img->read(((size_t)bitmap) + img->index, tmp_buf, sizeof(tmp_buf));
+                read_ptr = tmp_buf;
+                img->read(start_addr + img->index, tmp_buf, sizeof(tmp_buf));
             }
             else {
-                tmp_buf[0] = bitmap[img->index];
-                tmp_buf[1] = bitmap[img->index + 1];
-                tmp_buf[2] = bitmap[img->index + 2];
-                tmp_buf[3] = bitmap[img->index + 3];
-                tmp_buf[4] = bitmap[img->index + 4];
+                read_ptr = start_ptr + img->index;
             }
 
             img->index ++;
-            img->remainder = tmp_buf[0];
+            img->remainder = read_ptr[0];
 
             switch (format) {
             case SGL_PIXMAP_FMT_RLE_RGB332:
-                img->color = sgl_rgb332_to_color(tmp_buf[1]);
+                pix_value = read_ptr[1];
+                img->color = sgl_rgb332_to_color(pix_value);
+                img->pix_alpha = SGL_ALPHA_MAX;
+                img->index ++;
+                break;
+            case SGL_PIXMAP_FMT_RLE_ARGB2222:
+                pix_value = read_ptr[1];
+                img->color = sgl_rgb222_to_color(pix_value);
+                img->pix_alpha = sgl_opa2_table[pix_value >> 6];
                 img->index ++;
                 break;
             case SGL_PIXMAP_FMT_RLE_RGB565:
-                img->color = sgl_rgb565_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
+                pix_value = read_ptr[1] | (read_ptr[2] << 8);
+                img->color = sgl_rgb565_to_color(pix_value);
+                img->pix_alpha = SGL_ALPHA_MAX;
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB4444:
-                img->color = sgl_rgb444_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
-                img->color = sgl_color_mixer(img->color, *out, sgl_opa4_table[tmp_buf[2] >> 4]);
+                pix_value = read_ptr[1] | (read_ptr[2] << 8);
+                img->color = sgl_rgb444_to_color(pix_value);
+                img->pix_alpha = sgl_opa4_table[pix_value >> 12];
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_RGB888:
-                img->color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
+                pix_value = read_ptr[1] | (read_ptr[2] << 8) | (read_ptr[3] << 16);
+                img->color = sgl_rgb888_to_color(pix_value);
+                img->pix_alpha = SGL_ALPHA_MAX;
                 img->index += 3;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB8888:
-                img->color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
-                img->color = sgl_color_mixer(img->color, *out, tmp_buf[4]);
+                pix_value = read_ptr[1] | (read_ptr[2] << 8) | (read_ptr[3] << 16);
+                img->color = sgl_rgb888_to_color(pix_value);
+                img->pix_alpha = read_ptr[4];
                 img->index += 4;
                 break;
             default:
@@ -91,6 +104,7 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
         }
 
         if (out != NULL && i >= area->x1 && i <= area->x2) {
+            img->color = (img->pix_alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->pix_alpha));
             *out = (img->alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->alpha));
             out ++;
         }
@@ -102,10 +116,13 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
 static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_area_t clip = SGL_AREA_INVALID;
-    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    sgl_ext_img_t *ext_img = sgl_container_of(obj, sgl_ext_img_t, obj);
     const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->pixmap_idx];
-    const uint8_t *bitmap = pixmap->bitmap.array;
-    uint8_t pix_byte = sgl_pixmal_get_bits(pixmap);
+    uintptr_t read_addr = pixmap->bitmap.addr;
+    uint8_t pix_byte = sgl_pixmal_get_bytes_per_pixel(pixmap);
+    sgl_color_t tmp_color, *buf = NULL, *blend = NULL;
+    size_t pix_value = 0;
+    size_t offset = 0;
 
     sgl_area_t area = {
         .x1 = obj->coords.x1,
@@ -115,101 +132,72 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
     };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_color_t *buf = NULL, *blend = NULL;
-
         if (!sgl_surf_clip(surf, &obj->area, &clip)) {
             return;
         }
-    
+
         if (pixmap->format < SGL_PIXMAP_FMT_RLE_RGB332) {
-
             buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
-            if (ext_img->read != NULL) {
-                uint8_t *pixmap_buf = (uint8_t*)sgl_malloc(pix_byte * (clip.x2 - clip.x1 + 1));
-                sgl_color_t tmp_color;
-                uint32_t offset = 0, line_ofs = 0;
 
-                for (int y = clip.y1; y <= clip.y2; y++) {
-                    blend = buf;
-                    offset = ((((y - area.y1) * pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
-
-                    ext_img->read(((size_t)bitmap) + offset, pixmap_buf, pix_byte * (clip.x2 - clip.x1 + 1));
-                    line_ofs = 0;
-
-                    for (int x = clip.x1; x <= clip.x2; x++) {
-                        switch (pixmap->format) {
-                        case SGL_PIXMAP_FMT_RGB332:
-                            tmp_color = sgl_rgb332_to_color(pixmap_buf[line_ofs]);
-                            break;
-                        case SGL_PIXMAP_FMT_RGB565:
-                            tmp_color = sgl_rgb565_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
-                            break;
-                        case SGL_PIXMAP_FMT_ARGB4444:
-                            tmp_color = sgl_rgb444_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
-                            tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa4_table[pixmap_buf[line_ofs + 1] >> 4]);
-                            break;
-                        case SGL_PIXMAP_FMT_RGB888:
-                            tmp_color = sgl_rgb888_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
-                            break;
-                        case SGL_PIXMAP_FMT_ARGB8888:
-                            tmp_color = sgl_rgb888_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
-                            tmp_color = sgl_color_mixer(tmp_color, *blend, pixmap_buf[line_ofs + 3]);
-                            break;
-                        default:
-                            break;
-                        }
-
-                        *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
-                        line_ofs += pix_byte;
-                        blend ++;
-                    }
-                    buf += surf->w;
-                }
-                sgl_free(pixmap_buf);
+            uint8_t *pixmap_buf = (uint8_t*)pixmap->bitmap.array;
+            if(ext_img->read != NULL){
+                pixmap_buf = (uint8_t*)sgl_malloc(pix_byte * (clip.x2 - clip.x1 + 1));
             }
-            else {
-                sgl_color_t tmp_color;
-                uint32_t offset = 0;
 
-                for (int y = clip.y1; y <= clip.y2; y++) {
-                    blend = buf;
-                    offset = ((((y - area.y1) * pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
-
-                    for (int x = clip.x1; x <= clip.x2; x++) {
-                        switch (pixmap->format) {
-                        case SGL_PIXMAP_FMT_RGB332:
-                            tmp_color = sgl_rgb332_to_color(bitmap[offset]);
-                            break;
-                        case SGL_PIXMAP_FMT_RGB565:
-                            tmp_color = sgl_rgb565_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
-                            break;
-                        case SGL_PIXMAP_FMT_ARGB4444:
-                            tmp_color = sgl_rgb444_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
-                            tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa4_table[bitmap[offset + 1] >> 4]);
-                            break;
-                        case SGL_PIXMAP_FMT_RGB888:
-                            tmp_color = sgl_rgb888_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
-                            break;
-                        case SGL_PIXMAP_FMT_ARGB8888:
-                            tmp_color = sgl_rgb888_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
-                            tmp_color = sgl_color_mixer(tmp_color, *blend, bitmap[offset + 3]);
-                            break;
-                        default:
-                            break;
-                        }
-
-                        *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
-                        offset += pix_byte;
-                        blend ++;
-                    };
-                    buf += surf->w;
+            for (int y = clip.y1; y <= clip.y2; y++) {
+                blend = buf;
+                offset = ((((y - area.y1) * pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
+                if(ext_img->read != NULL) {
+                    ext_img->read(read_addr + offset, pixmap_buf, pix_byte * (clip.x2 - clip.x1 + 1));
+                    offset = 0;
                 }
+                for (int x = clip.x1; x <= clip.x2; x++) {
+                    switch (pixmap->format) {
+                    case SGL_PIXMAP_FMT_RGB332:
+                        pix_value = pixmap_buf[offset];
+                        tmp_color = sgl_rgb332_to_color(pix_value);
+                        break;
+                    case SGL_PIXMAP_FMT_RGB565:
+                        pix_value = pixmap_buf[offset] | (pixmap_buf[offset + 1] << 8);
+                        tmp_color = sgl_rgb565_to_color(pix_value);
+                        break;
+                    case SGL_PIXMAP_FMT_ARGB2222:
+                        pix_value = pixmap_buf[offset];
+                        tmp_color = sgl_rgb222_to_color(pix_value);
+                        tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa2_table[pix_value >> 6]);
+                        break;
+                    case SGL_PIXMAP_FMT_ARGB4444:
+                        pix_value = pixmap_buf[offset] | (pixmap_buf[offset + 1] << 8);
+                        tmp_color = sgl_rgb444_to_color(pix_value);
+                        tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa4_table[pix_value >> 12]);
+                        break;
+                    case SGL_PIXMAP_FMT_RGB888:
+                        pix_value = pixmap_buf[offset] | (pixmap_buf[offset + 1] << 8) | (pixmap_buf[offset + 2] << 16);
+                        tmp_color = sgl_rgb888_to_color(pix_value);
+                        break;
+                    case SGL_PIXMAP_FMT_ARGB8888:
+                        pix_value = pixmap_buf[offset] | (pixmap_buf[offset + 1] << 8) | (pixmap_buf[offset + 2] << 16);
+                        tmp_color = sgl_rgb888_to_color(pix_value);
+                        tmp_color = sgl_color_mixer(tmp_color, *blend, pixmap_buf[offset + 3]);
+                        break;
+                    default:
+                        break;
+                    }
+                    *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
+                    offset += pix_byte;
+                    blend ++;
+                };
+                buf += surf->w;
+            }
+            if(ext_img->read != NULL) {
+                sgl_free(pixmap_buf);
             }
         }
         else {
             /* RLE pixmap support */
             if (clip.y1 == surf->dirty->y1 || clip.y1 == obj->area.y1) {
-                ext_img_rle_init(ext_img);
+                ext_img->index = 0;
+                ext_img->remainder = 0;
                 for (int y = area.y1; y < clip.y1; y++) {
                     rle_decompress_line(ext_img, &area, &clip, NULL);
                 }

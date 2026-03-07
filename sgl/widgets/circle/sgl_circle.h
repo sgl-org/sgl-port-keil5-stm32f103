@@ -62,7 +62,7 @@ sgl_obj_t* sgl_circle_create(sgl_obj_t* parent);
  */
 static inline void sgl_circle_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_circle_t *circle = (sgl_circle_t *)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     circle->desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -75,7 +75,7 @@ static inline void sgl_circle_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_circle_set_radius(sgl_obj_t *obj, uint16_t radius)
 {
-    sgl_circle_t *circle = (sgl_circle_t *)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     sgl_obj_set_radius(obj, radius);
     circle->desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
@@ -89,7 +89,7 @@ static inline void sgl_circle_set_radius(sgl_obj_t *obj, uint16_t radius)
  */
 static inline void sgl_circle_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_circle_t *circle = (sgl_circle_t *)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     circle->desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -102,7 +102,7 @@ static inline void sgl_circle_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_circle_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_circle_t *circle = (sgl_circle_t *)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     circle->desc.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -115,7 +115,7 @@ static inline void sgl_circle_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pix
  */
 static inline void sgl_circle_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_circle_t *circle = (sgl_circle_t *)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     circle->desc.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -128,7 +128,7 @@ static inline void sgl_circle_set_border_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_circle_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_circle_t *circle = (sgl_circle_t *)obj;
+    sgl_circle_t *circle = sgl_container_of(obj, sgl_circle_t, obj);
     circle->desc.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);

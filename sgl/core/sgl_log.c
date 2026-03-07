@@ -41,7 +41,7 @@
 */
 void sgl_log(const char *level, const char * format, ...)
 {
-    char buffer[200];
+    char buffer[120];
     int  tail = 0;
     int  pref_size = strlen(level);
 

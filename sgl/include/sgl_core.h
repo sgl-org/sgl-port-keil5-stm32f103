@@ -388,7 +388,7 @@ typedef struct sgl_obj {
     sgl_area_t      area;
     sgl_area_t      coords;
     void            (*event_fn)(sgl_event_t *e);
-    size_t          event_data;
+    void            *event_data;
     void            (*construct_fn)(sgl_surf_t *surf, struct sgl_obj *obj, sgl_event_t *event);
     struct sgl_obj  *parent;
     struct sgl_obj  *child;
@@ -480,6 +480,7 @@ typedef struct sgl_system {
     void               (*logdev)(const char *str);
     sgl_fbdev_t        fbdev;
     volatile uint32_t  tick_ms;
+    const sgl_font_t   *font;
 #if (CONFIG_SGL_FBDEV_ROTATION != 0)
     sgl_color_t        *rotation;
 #elif (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
@@ -689,6 +690,9 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
     sgl_area_t area_dst = *area;
 
     switch (sgl_system.angle) {
+    case 0:
+        sgl_system.fbdev.fbinfo.flush_area(area, src);
+        return;
     case 90:
         sgl_fbdev_rotate_90(area_dst, area, sgl_system.rotation, src);
         break;
@@ -709,6 +713,7 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
 }
 
 
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
 /**
  * @brief set framebuffer device rotation angle
  * @param angle [in] rotation angle, that is 0, 90, 180, 270
@@ -716,6 +721,7 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
  * @note Rotation angle must be 0, 90, 180, 270
  */
 void sgl_fbdev_set_angle(uint16_t angle);
+#endif //CONFIG_SGL_FBDEV_RUNTIME_ROTATION
 
 
 /**
@@ -745,11 +751,11 @@ static inline void sgl_log_stdout(const char *str)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap);
 
 
 /**
@@ -958,6 +964,29 @@ void sgl_dirty_area_push(sgl_area_t *area);
 
 
 /**
+ * @brief set system font
+ * @param font pointer to font
+ * @return none
+ */
+static inline void sgl_set_system_font(const sgl_font_t *font)
+{
+    SGL_ASSERT(font != NULL);
+    sgl_system.font = font;
+}
+
+
+/**
+ * @brief get system font
+ * @param none
+ * @return pointer to system font
+ */
+static inline const sgl_font_t* sgl_get_system_font(void)
+{
+    return sgl_system.font; 
+}
+
+
+/**
  * @brief  Set the object to be destroyed
  * @param  obj: the object to set
  * @retval None
@@ -1006,6 +1035,15 @@ static inline void sgl_obj_clear_dirty(sgl_obj_t *obj)
     SGL_ASSERT(obj != NULL);
     obj->dirty = 0;
 }
+
+
+/**
+ * @brief  Clear all dirty areas of the object and its children.
+ * @param[in] obj  The object to clear.
+ * @return  None
+ * @note   This function is used to clear all dirty areas of the object and its children.
+ */
+void sgl_obj_clear_all_dirty(sgl_obj_t *obj);
 
 
 /**
@@ -1571,7 +1609,7 @@ static inline sgl_area_t sgl_obj_get_fill_rect(sgl_obj_t *obj)
  * @param data: event callback function data
  * @return none
  */
-static inline void sgl_obj_set_event_cb(sgl_obj_t *obj, void (*event_fn)(sgl_event_t *e), size_t data)
+static inline void sgl_obj_set_event_cb(sgl_obj_t *obj, void (*event_fn)(sgl_event_t *e), void *data)
 {
     SGL_ASSERT(obj != NULL);
     obj->event_fn = event_fn;
@@ -1741,23 +1779,6 @@ static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_c
 #endif
     return ret;
 }
-
-
-/**
- * @brief Blends foreground and background colors using a specified alpha blending factor, applied to multiple pixels.
- *
- * This function performs per-pixel linear interpolation between foreground and background colors over a buffer of `len` pixels:
- *     result = (fg_color * factor + bg_color * (255 - factor)) / 255
- * The blending factor `factor` ranges from 0 to 255:
- *   - 0 means fully transparent (output = background),
- *   - 255 means fully opaque (output = foreground).
- * 
- * @param[in,out] fg_color   Pointer to the foreground color(s) (input); receives blended output (in-place update)
- * @param[in]     bg_color   Pointer to the background color buffer.
- * @param[in]     factor     Blending factor: 0 = fully transparent, 255 = fully opaque
- * @param[in]     len        Number of color elements (pixels) to process
- */
-void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t factor, uint32_t len);
 
 
 /**
@@ -2039,11 +2060,11 @@ void sgl_page_set_pixmap(sgl_obj_t* obj, const sgl_pixmap_t *pixmap);
 
 
 /**
- * @brief get patent of an object
+ * @brief get parent of an object
  * @param obj the object
- * @return the patent of the object
+ * @return the parent of the object
  */
-static inline sgl_obj_t* sgl_obj_get_patent(sgl_obj_t* obj)
+static inline sgl_obj_t* sgl_obj_get_parent(sgl_obj_t* obj)
 {
     SGL_ASSERT(obj != NULL);
     return obj->parent;

@@ -70,7 +70,7 @@ sgl_obj_t* sgl_keyboard_create(sgl_obj_t* parent);
  */
 static inline void sgl_keyboard_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->body_desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -83,7 +83,7 @@ static inline void sgl_keyboard_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_keyboard_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->body_desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -96,7 +96,7 @@ static inline void sgl_keyboard_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_keyboard_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     sgl_obj_set_radius(obj, radius);
     keyboard->body_desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
@@ -110,7 +110,7 @@ static inline void sgl_keyboard_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_keyboard_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->body_desc.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -124,7 +124,7 @@ static inline void sgl_keyboard_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *p
  */
 static inline void sgl_keyboard_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->body_desc.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -137,7 +137,7 @@ static inline void sgl_keyboard_set_border_color(sgl_obj_t *obj, sgl_color_t col
  */
 static inline void sgl_keyboard_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
@@ -151,7 +151,7 @@ static inline void sgl_keyboard_set_border_width(sgl_obj_t *obj, uint8_t width)
  */
 static inline void sgl_keyboard_set_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->text_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -164,7 +164,7 @@ static inline void sgl_keyboard_set_text_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_keyboard_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -177,7 +177,7 @@ static inline void sgl_keyboard_set_text_font(sgl_obj_t *obj, const sgl_font_t *
  */
 static inline void sgl_keyboard_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.radius = radius;
     sgl_obj_set_dirty(obj);
 }
@@ -190,7 +190,7 @@ static inline void sgl_keyboard_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_keyboard_set_btn_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -203,7 +203,7 @@ static inline void sgl_keyboard_set_btn_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_keyboard_set_btn_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -216,7 +216,7 @@ static inline void sgl_keyboard_set_btn_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_keyboard_set_btn_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -229,7 +229,7 @@ static inline void sgl_keyboard_set_btn_pixmap(sgl_obj_t *obj, const sgl_pixmap_
  */
 static inline void sgl_keyboard_set_btn_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -242,7 +242,7 @@ static inline void sgl_keyboard_set_btn_border_color(sgl_obj_t *obj, sgl_color_t
  */
 static inline void sgl_keyboard_set_btn_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->btn_desc.border = width;
     sgl_obj_set_dirty(obj);
 }
@@ -266,7 +266,7 @@ static inline uint8_t sgl_keyboard_get_opcode(sgl_obj_t *obj)
  */
 static inline void sgl_keyboard_set_textarea(sgl_obj_t *obj, char *buffer, int buf_max_len)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     keyboard->edit = buffer;
     keyboard->edit_max_len = buf_max_len;
 }

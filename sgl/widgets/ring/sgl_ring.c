@@ -35,7 +35,7 @@
 
 static void sgl_ring_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_ring_t *ring = (sgl_ring_t*)obj;
+    sgl_ring_t *ring = sgl_container_of(obj, sgl_ring_t, obj);
     int16_t cx, cy;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {

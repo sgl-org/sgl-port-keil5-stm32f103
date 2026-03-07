@@ -57,16 +57,20 @@ extern "C" {
 
 #define sgl_swap(a, b)                    do { (*a) ^= (*b); (*b) ^= (*a); (*a) ^= (*b); } while (0)
 
+#define sgl_mid(a, b)                     (((a) + (b)) / 2)
 
 #define SGL_FIXED_SHIFT                   (10)
 #define SGL_FIXED_ONE                     (1 << SGL_FIXED_SHIFT)
 #define SGL_FIXED_MASK                    (SGL_FIXED_ONE - 1)
 
+#define SGL_SIN_FIXED_ONE                 (32767)
+#define SGL_COS_FIXED_ONE                 (32767)
 
 /**
  * @brief Calculate the sine of an angle
  * @param angle: Angle in degrees such 0-359
  * @return sine of the angle from sin0_90_table
+ * @note This function has implemented angle normalization to the range of 0 to 360 degrees.
  */
 int32_t sgl_sin(int16_t angle);
 
@@ -75,6 +79,7 @@ int32_t sgl_sin(int16_t angle);
  * @brief Calculate the cos of an angle
  * @param angle: Angle in degrees such 0-359
  * @return cos of the angle from sin0_90_table
+ * @note This function has implemented angle normalization to the range of 0 to 360 degrees.
  */
 static inline int32_t sgl_cos(int16_t angle)
 {

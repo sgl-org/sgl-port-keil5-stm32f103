@@ -1,4 +1,4 @@
-/* source/fonts/sgl_font_test.c
+/* source/fonts/sgl_ascii_consolas24_compress.c
  *
  * MIT License
  *

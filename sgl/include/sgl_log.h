@@ -151,12 +151,18 @@ void sgl_assert_handler(const char *file, const char *func, int line);
 #endif
 
 
-#define SGL_ASSERT(condition)           do {                                                          \
-                                            if (!(condition)) {                                        \
+#define SGL_ASSERT(cond)                do {                                                          \
+                                            if (!(cond)) {                                            \
                                                 sgl_assert_handler(__FILE__, __FUNCTION__, __LINE__); \
                                             }                                                         \
                                         } while(0)
 
+#define SGL_ASSERT_INFO(cond, info)     do {                                                          \
+                                            if (!(cond)) {                                            \
+                                                SGL_LOG_ERROR("ASSERT: %s", info);                    \
+                                                sgl_assert_handler(__FILE__, __FUNCTION__, __LINE__); \
+                                            }                                                         \
+                                        } while(0)
 
 #else // if no define debug mode macro
 
@@ -168,8 +174,8 @@ void sgl_assert_handler(const char *file, const char *func, int line);
 #define SGL_LOG_USER(...)               do {} while(0)
 #define SGL_LOG(...)                    do {} while(0)
 
-#define SGL_ASSERT(condition)           do {} while(0)
-
+#define SGL_ASSERT(cond)               do {} while(0)
+#define SGL_ASSERT_INFO(cond, info)    do {} while(0)
 #endif
 
 

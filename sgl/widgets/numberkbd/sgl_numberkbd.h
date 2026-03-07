@@ -66,7 +66,7 @@ sgl_obj_t* sgl_numberkbd_create(sgl_obj_t* parent);
  */
 static inline void sgl_numberkbd_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->text_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -79,7 +79,7 @@ static inline void sgl_numberkbd_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_numberkbd_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->body_desc.alpha = alpha;
     numberkbd->btn_desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
@@ -93,7 +93,7 @@ static inline void sgl_numberkbd_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_numberkbd_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     sgl_obj_set_radius(obj, radius);
     numberkbd->body_desc.radius = obj->radius;
     numberkbd->btn_desc.radius = numberkbd->body_desc.radius;
@@ -108,7 +108,7 @@ static inline void sgl_numberkbd_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_numberkbd_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->body_desc.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
@@ -122,7 +122,7 @@ static inline void sgl_numberkbd_set_border_width(sgl_obj_t *obj, uint8_t width)
  */
 static inline void sgl_numberkbd_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->body_desc.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -135,7 +135,7 @@ static inline void sgl_numberkbd_set_border_color(sgl_obj_t *obj, sgl_color_t co
  */
 static inline void sgl_numberkbd_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -148,7 +148,7 @@ static inline void sgl_numberkbd_set_text_font(sgl_obj_t *obj, const sgl_font_t 
  */
 static inline void sgl_numberkbd_set_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->text_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -161,7 +161,7 @@ static inline void sgl_numberkbd_set_text_color(sgl_obj_t *obj, sgl_color_t colo
  */
 static inline void sgl_numberkbd_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->btn_desc.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -174,7 +174,7 @@ static inline void sgl_numberkbd_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *
  */
 static inline void sgl_numberkbd_set_btn_margin(sgl_obj_t *obj, uint8_t margin)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->margin = margin;
     sgl_obj_set_dirty(obj);
 }
@@ -187,7 +187,7 @@ static inline void sgl_numberkbd_set_btn_margin(sgl_obj_t *obj, uint8_t margin)
  */
 static inline void sgl_numberkbd_set_btn_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->btn_desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -200,7 +200,7 @@ static inline void sgl_numberkbd_set_btn_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_numberkbd_set_btn_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->btn_desc.border = width;
     sgl_obj_set_dirty(obj);
 }
@@ -213,7 +213,7 @@ static inline void sgl_numberkbd_set_btn_border_width(sgl_obj_t *obj, uint8_t wi
  */
 static inline void sgl_numberkbd_set_btn_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->btn_desc.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -226,7 +226,7 @@ static inline void sgl_numberkbd_set_btn_border_color(sgl_obj_t *obj, sgl_color_
  */
 static inline void sgl_numberkbd_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     sgl_obj_set_radius(obj, radius);
     numberkbd->btn_desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
@@ -240,7 +240,7 @@ static inline void sgl_numberkbd_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_numberkbd_set_btn_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     numberkbd->btn_desc.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }

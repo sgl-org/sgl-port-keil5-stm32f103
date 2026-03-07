@@ -107,16 +107,18 @@ extern "C" {
 /* the pixmap format */
 #define  SGL_PIXMAP_FMT_NONE                    (0)
 #define  SGL_PIXMAP_FMT_RGB332                  (1)
-#define  SGL_PIXMAP_FMT_RGB565                  (2)
-#define  SGL_PIXMAP_FMT_ARGB4444                (3)
-#define  SGL_PIXMAP_FMT_RGB888                  (4)
-#define  SGL_PIXMAP_FMT_ARGB8888                (5)
-#define  SGL_PIXMAP_FMT_RLE_RGB332              (6)
-#define  SGL_PIXMAP_FMT_RLE_RGB565              (7)
-#define  SGL_PIXMAP_FMT_RLE_ARGB4444            (8)
-#define  SGL_PIXMAP_FMT_RLE_RGB888              (9)
-#define  SGL_PIXMAP_FMT_RLE_ARGB8888            (10)
-#define  SGL_PIXMAP_FMT_MAX                     (11)
+#define  SGL_PIXMAP_FMT_ARGB2222                (2)
+#define  SGL_PIXMAP_FMT_RGB565                  (3)
+#define  SGL_PIXMAP_FMT_ARGB4444                (4)
+#define  SGL_PIXMAP_FMT_RGB888                  (5)
+#define  SGL_PIXMAP_FMT_ARGB8888                (6)
+#define  SGL_PIXMAP_FMT_RLE_RGB332              (7)
+#define  SGL_PIXMAP_FMT_RLE_ARGB2222            (8)
+#define  SGL_PIXMAP_FMT_RLE_RGB565              (9)
+#define  SGL_PIXMAP_FMT_RLE_ARGB4444            (10)
+#define  SGL_PIXMAP_FMT_RLE_RGB888              (11)
+#define  SGL_PIXMAP_FMT_RLE_ARGB8888            (12)
+#define  SGL_PIXMAP_FMT_MAX                     (13)
 
 
 #ifdef __GNUC__            /* gcc compiler   */
@@ -191,13 +193,17 @@ extern "C" {
                                                                .ch.green   = (g),                                     \
                                                                .ch.red     = (r),}
                 
+#define sgl_rgb222_to_color(rgb222)             (sgl_color_t){ .ch.blue    = ((((rgb222) >> 0) & 0x03) << 6),         \
+                                                               .ch.green   = ((((rgb222) >> 2) & 0x03) << 6),         \
+                                                               .ch.red     = ((((rgb222) >> 4) & 0x03) << 6),}
+
 #define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = ((((rgb332) >> 0) & 0x03) << 6),         \
                                                                .ch.green   = ((((rgb332) >> 2) & 0x07) << 5),         \
                                                                .ch.red     = ((((rgb332) >> 5) & 0x07) << 5),}
                                                             
-#define sgl_rgb444_to_color(rgb444)             (sgl_color_t){ .ch.blue    = ((((rgb444) >> 0) & 0xF) << 1),          \
-                                                               .ch.green   = ((((rgb444) >> 4) & 0xF) << 2),          \
-                                                               .ch.red     = ((((rgb444) >> 8) & 0xF) << 1),}
+#define sgl_rgb444_to_color(rgb444)             (sgl_color_t){ .ch.blue    = ((((rgb444) >> 0) & 0xF) << 4),          \
+                                                               .ch.green   = ((((rgb444) >> 4) & 0xF) << 4),          \
+                                                               .ch.red     = ((((rgb444) >> 8) & 0xF) << 4),}
 
 #define sgl_rgb565_to_color(rgb565)             (sgl_color_t){ .ch.blue    = ((((rgb565) >> 0) & 0x1F) << 3),         \
                                                                .ch.green   = ((((rgb565) >> 5) & 0x3F) << 2),         \
@@ -212,13 +218,17 @@ extern "C" {
                                                                .ch.green   = (g) >> 2,                                \
                                                                .ch.red     = (r) >> 3,}
 
+#define sgl_rgb222_to_color(rgb222)             (sgl_color_t){ .ch.blue    = ((((rgb222) >> 0) & 0x03) << 3),         \
+                                                               .ch.green   = ((((rgb222) >> 2) & 0x03) << 4),         \
+                                                               .ch.red     = ((((rgb222) >> 4) & 0x03) << 3),}
+
 #define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = ((((rgb332) >> 0) & 0x03) << 3),         \
-                                                               .ch.green   = ((((rgb332) >> 2) & 0x07) << 2),         \
-                                                               .ch.red     = ((((rgb332) >> 5) & 0x07) << 2),}
+                                                               .ch.green   = ((((rgb332) >> 2) & 0x03) << 2),         \
+                                                               .ch.red     = ((((rgb332) >> 5) & 0x03) << 2),}
 
 #define sgl_rgb444_to_color(rgb444)             (sgl_color_t){ .ch.blue    = ((((rgb444) >> 0) & 0xF) << 1),          \
-                                                               .ch.green   = ((((rgb444) >> 4) & 0xF) << 1),          \
-                                                               .ch.red     = ((((rgb444) >> 10) & 0xF) << 1),}
+                                                               .ch.green   = ((((rgb444) >> 4) & 0xF) << 2),          \
+                                                               .ch.red     = ((((rgb444) >> 8) & 0xF) << 1),}
 
 #define sgl_rgb565_to_color(rgb565)             (sgl_color_t){ .ch.blue    = ((rgb565) >> 0) & 0x1F,                  \
                                                                .ch.green   = ((rgb565) >> 5) & 0x3F,                  \
@@ -233,13 +243,17 @@ extern "C" {
                                                                .ch.green   = (g >> 5),                                \
                                                                .ch.red     = (r >> 5),}
 
+#define sgl_rgb222_to_color(rgb222)             (sgl_color_t){ .ch.blue    = ((((rgb222) >> 0) & 0x03) >> 0),         \
+                                                               .ch.green   = ((((rgb222) >> 2) & 0x03) >> 1),         \
+                                                               .ch.red     = ((((rgb222) >> 4) & 0x03) >> 1),}
+
 #define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = (((rgb332) >> 0) & 0x03),                \
                                                                .ch.green   = (((rgb332) >> 3) & 0x07),                \
                                                                .ch.red     = (((rgb332) >> 5) & 0x07),}
 
 #define sgl_rgb444_to_color(rgb444)             (sgl_color_t){ .ch.blue    = ((((rgb444) >> 0) & 0xF) >> 2),          \
-                                                               .ch.green   = ((((rgb444) >> 4) & 0x3F) >> 1),         \
-                                                               .ch.red     = ((((rgb444) >> 10) & 0x1F) >> 1),}
+                                                               .ch.green   = ((((rgb444) >> 4) & 0xF) >> 1),          \
+                                                               .ch.red     = ((((rgb444) >> 8) & 0xF) >> 1),}
 
 #define sgl_rgb565_to_color(rgb565)             (sgl_color_t){ .ch.blue    = ((((rgb565) >> 0) & 0x1F) >> 3),         \
                                                                .ch.green   = ((((rgb565) >> 5) & 0x3F) >> 3),         \

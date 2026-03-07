@@ -83,9 +83,9 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
  *             May be NULL if no cleanup or notification is needed.
  *
  * @repeat_cnt: Number of times the animation should repeat.
- *              - 0: play once (no repeat)
- *              - n: repeat n times (total plays = n + 1)
- *              - -1: repeat indefinitely
+ *              - -1: play indefinitely, you can use SGL_ANIM_REPEAT_LOOP
+ *              - 1: play once (no repeat), you can use SGL_ANIM_REPEAT_ONCE
+ *              - n: repeat n times (total plays = n)
  *              @note Only 30 bits are allocated; max value is 0x3FFFFFFE.
  *
  * @finished: Flag indicating whether the animation has completed (including all repeats).
@@ -133,7 +133,7 @@ typedef struct sgl_anim_ctx {
 
 
 /* Animation context it will be used internally */
-extern sgl_anim_ctx_t anim_ctx;
+extern sgl_anim_ctx_t sgl_anim_ctx;
 
 
 /**
@@ -191,13 +191,16 @@ static inline void sgl_anim_stop(sgl_anim_t *anim)
 
 
 /**
- * @brief free animation object
+ * @brief delete animation object
  * @param  anim animation object
  * @return none
 */
-static inline void sgl_anim_free(sgl_anim_t *anim)
+static inline void sgl_anim_delete(sgl_anim_t *anim)
 {
     SGL_ASSERT(anim != NULL);
+    if (!anim->finished) {
+        sgl_anim_stop(anim);
+    } 
     sgl_free(anim);
 }
 
@@ -321,7 +324,7 @@ static inline void sgl_anim_set_finish_cb(sgl_anim_t *anim, void (*finish_cb)(sg
 static inline bool sgl_anim_is_finished(sgl_anim_t *anim)
 {
     SGL_ASSERT(anim != NULL);
-    return anim->finished == 1;
+    return (bool)anim->finished;
 }
 
 
@@ -414,6 +417,24 @@ int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int32_t start,
  */
 int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
 #define SGL_ANIM_PATH_EASE_IN  sgl_anim_path_ease_in
+
+
+/**
+ * sgl_anim_path_overshoot - Overshoot animation path
+ *
+ * This function creates an animation curve that overshoots the target end value
+ * slightly before settling back to it, creating a natural "bounce" or "spring-like"
+ * effect for a more dynamic and realistic animation.
+ *
+ * @param elaps     Elapsed time (ms) since the animation started
+ * @param duration  Total animation duration (ms)
+ * @param start     Initial value of the animated property at the start of the animation
+ * @param end       Target end value of the animated property
+ * @return          Interpolated value of the animated property at the current elapsed time
+ */
+int32_t sgl_anim_path_overshoot(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
+#define SGL_ANIM_PATH_OVERSHOOT  sgl_anim_path_overshoot
+
 
 #endif // ! CONFIG_SGL_ANIMATION
 

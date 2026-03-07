@@ -35,7 +35,7 @@
 
 static void sgl_arc_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_arc_t *arc = (sgl_arc_t*)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     int16_t tb_angle = 0;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {

@@ -130,48 +130,47 @@ static int32_t sgl_capsule_sdf_optimized(int16_t px, int16_t py, int16_t ax, int
  */
 void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t thickness, sgl_color_t color, uint8_t alpha)
 {
-	uint8_t c;
-	int64_t len;
-	sgl_area_t clip = SGL_AREA_MAX;
-	sgl_color_t *buf = NULL, *blend = NULL;
-	int16_t thick_half = (thickness >> 1);
-	sgl_area_t c_rect = {.x1 = x1 - thick_half, .x2 = x2 + thick_half, .y1 = y1 - thick_half,.y2 = y2 + thick_half};
+    uint8_t c;
+    int64_t len;
+    sgl_area_t clip = SGL_AREA_MAX;
+    sgl_color_t *buf = NULL, *blend = NULL;
+    int16_t thick_half = (thickness >> 1);
 
-	if (c_rect.x1 > c_rect.x2) {
-		sgl_swap(&c_rect.x1, &c_rect.x2);
-	}
-	if (c_rect.y1 > c_rect.y2) {
-		sgl_swap(&c_rect.y1, &c_rect.y2);
-	}
+    sgl_area_t c_rect = {
+        .x1 = (x1 < x2 ? x1 : x2) - thick_half,
+        .x2 = (x1 > x2 ? x1 : x2) + thick_half,
+        .y1 = (y1 < y2 ? y1 : y2) - thick_half,
+        .y2 = (y1 > y2 ? y1 : y2) + thick_half,
+    };
 
-	sgl_surf_clip_area_return(surf, area, &clip);
-	if (!sgl_area_selfclip(&clip, &c_rect)) {
-		return;
-	}
+    sgl_surf_clip_area_return(surf, area, &clip);
+    if (!sgl_area_selfclip(&clip, &c_rect)) {
+        return;
+    }
 
-	buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
-	for (int y = clip.y1; y <= clip.y2; y++) {
-		blend = buf;
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
+    for (int y = clip.y1; y <= clip.y2; y++) {
+        blend = buf;
 
-		for (int x = clip.x1; x <= clip.x2; x++, blend++) {
-			len = sgl_capsule_sdf_optimized(x, y, x1, y1, x2, y2);
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
+            len = sgl_capsule_sdf_optimized(x, y, x1, y1, x2, y2);
 
-			if (len <= (thick_half - 1) << 8) {
-				*blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
-				continue;
-			}
+            if (len <= (thick_half - 1) << 8) {
+                *blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
+                continue;
+            }
 
-			if (len > ((thick_half - 1) << 8) && len < (thick_half << 8)) {
-				c = len - ((thick_half - 1) << 8);
+            if (len > ((thick_half - 1) << 8) && len < (thick_half << 8)) {
+                c = len - ((thick_half - 1) << 8);
 
-				if (alpha == SGL_ALPHA_MAX)
-					*blend = sgl_color_mixer(*blend, color, c);
-				else
-					*blend = sgl_color_mixer(sgl_color_mixer(*blend, color, c), *blend, alpha);
-			}
-		}
-		buf += surf->w;
-	}
+                if (alpha == SGL_ALPHA_MAX)
+                    *blend = sgl_color_mixer(*blend, color, c);
+                else
+                    *blend = sgl_color_mixer(sgl_color_mixer(*blend, color, c), *blend, alpha);
+            }
+        }
+        buf += surf->w;
+    }
 }
 
 
@@ -179,25 +178,18 @@ void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int1
  * @brief draw a line
  * @param surf surface
  * @param area area that contains the line
- * @param coords line coords
  * @param desc line description
  * @return none
  */
-void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *coords, sgl_draw_line_t *desc)
+void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_line_t *desc)
 {
-	uint8_t alpha = desc->alpha;
-	int16_t x1 = coords->x1;
-	int16_t y1 = coords->y1;
-	int16_t x2 = coords->x2;
-	int16_t y2 = coords->y2;
-
-	if (x1 == x2) {
-		sgl_draw_fill_vline(surf, area, x1, y1, y2, desc->width / 2, desc->color, alpha);
+	if (desc->x1 == desc->x2) {
+		sgl_draw_fill_vline(surf, area, desc->x1, desc->y1, desc->y2, desc->width / 2, desc->color, desc->alpha);
 	}
-	else if (y1 == y2) {
-		sgl_draw_fill_hline(surf, area, y1, x1, x2, desc->width / 2, desc->color, alpha);
+	else if (desc->y1 == desc->y2) {
+		sgl_draw_fill_hline(surf, area, desc->y1, desc->x1, desc->x2, desc->width / 2, desc->color, desc->alpha);
 	}
 	else {
-		draw_line_fill_slanted(surf, area, x1, y1, x2, y2, desc->width, desc->color, alpha);
+		draw_line_fill_slanted(surf, area, desc->x1, desc->y1, desc->x2, desc->y2, desc->width, desc->color, desc->alpha);
 	}
 }

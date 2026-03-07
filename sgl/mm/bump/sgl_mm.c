@@ -1,4 +1,4 @@
-/* source/mm/bump/mem.c
+/* source/mm/bump/sgl_mm.c
  *
  * MIT License
  *

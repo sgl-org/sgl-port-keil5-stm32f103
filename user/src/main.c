@@ -102,7 +102,7 @@ void delay(int x)
 
 /*#################################相关宏定义，需用户修改######################################*/
 #define    TIM2_TIME_PSC           720     //定义预分频值为7200，即时钟为72000000/7200=10000即10kHz
-#define    TIM2_TIME_ARR           200     //定义计数值为1000，即定时时间为1000/10000=0.1s
+#define    TIM2_TIME_ARR           100     //定义计数值为1000，即定时时间为1000/10000=0.1s
 
 void TIM2_Init(void)
 {
@@ -172,26 +172,22 @@ int main(void)
     USART1_Config();
     UART1_SendString("STM32F103C8T6 SGL DEMO\r\n");
 
-    sgl_init();
-
-    tft_init();
-
     TIM2_Init();
+	  tft_init();
 
-    sgl_boot_logo();
+    sgl_init();
 
     sgl_obj_t *rect = NULL;
     uint32_t count = 0;
     sgl_anim_t *anim = 0;
     sgl_obj_t *label = NULL;
-
-
+	  
     while (1) {
         sgl_task_handle();
         count ++;
 				SGL_LOG_INFO("obj sizeof = %d", sizeof(sgl_obj_t));
 
-        if(count > 2000) {
+        if(count > 20) {
             count = 0;
             int x = sgl_rand() % 240;
             rect = sgl_rect_create(NULL);

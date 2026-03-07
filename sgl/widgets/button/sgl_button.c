@@ -43,7 +43,7 @@
  */
 static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_button_t *button = (sgl_button_t*)obj;
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
     sgl_pos_t align_pos;
     sgl_rect_t fill_area;
     sgl_draw_rect_t rect = {
@@ -112,9 +112,9 @@ sgl_obj_t* sgl_button_create(sgl_obj_t* parent)
     button->border_color = SGL_THEME_BORDER_COLOR;
     button->pixmap = NULL;
 
-    button->text = NULL;
+    button->text = " ";
     button->text_color = SGL_THEME_TEXT_COLOR;
-    button->font = NULL;
+    button->font = sgl_get_system_font();
     button->align = SGL_ALIGN_CENTER;
 
     return obj;

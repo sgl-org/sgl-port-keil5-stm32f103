@@ -1,4 +1,4 @@
-/* source/widgets/sgl_textbox.h
+/* source/widgets/sgl_box.h
  *
  * MIT License
  *
@@ -75,7 +75,7 @@ sgl_obj_t* sgl_box_create(sgl_obj_t* parent);
  */
 static inline void sgl_box_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->bg.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -88,7 +88,7 @@ static inline void sgl_box_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_box_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     sgl_obj_set_radius(obj, radius);
     box->bg.radius = obj->radius;
     sgl_obj_set_dirty(obj);
@@ -102,7 +102,7 @@ static inline void sgl_box_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_box_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->bg.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -115,7 +115,7 @@ static inline void sgl_box_set_border_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_box_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->bg.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
@@ -129,7 +129,7 @@ static inline void sgl_box_set_border_width(sgl_obj_t *obj, uint8_t width)
  */
 static inline void sgl_box_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->bg.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -153,7 +153,7 @@ void sgl_box_set_elastic_scroll(sgl_obj_t* obj, int16_t up_limit, int16_t down_l
  */
 static inline void sgl_box_set_scrollbar_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->scroll_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -167,11 +167,12 @@ static inline void sgl_box_set_scrollbar_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_box_set_show_scrollbar(sgl_obj_t *obj, uint8_t show_vertical, uint8_t show_horizontal)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->show_v_scrollbar = show_vertical;
     box->show_h_scrollbar = show_horizontal;
     sgl_obj_set_dirty(obj);
 }
+
 /**
  * @brief set alpha (transparency) of the box
  * @param obj box object
@@ -180,7 +181,7 @@ static inline void sgl_box_set_show_scrollbar(sgl_obj_t *obj, uint8_t show_verti
  */
 static inline void sgl_box_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     box->bg.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }

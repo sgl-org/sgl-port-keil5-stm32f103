@@ -64,7 +64,7 @@ sgl_obj_t* sgl_2dball_create(sgl_obj_t* parent);
  */
 static inline void sgl_2dball_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_2dball_t *ball = (sgl_2dball_t *)obj;
+    sgl_2dball_t *ball = sgl_container_of(obj, sgl_2dball_t, obj);
     ball->color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -77,7 +77,7 @@ static inline void sgl_2dball_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_2dball_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_2dball_t *ball = (sgl_2dball_t *)obj;
+    sgl_2dball_t *ball = sgl_container_of(obj, sgl_2dball_t, obj);
     ball->bg_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -90,7 +90,7 @@ static inline void sgl_2dball_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_2dball_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_2dball_t *ball = (sgl_2dball_t *)obj;
+    sgl_2dball_t *ball = sgl_container_of(obj, sgl_2dball_t, obj);
     ball->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }

@@ -74,7 +74,7 @@ sgl_obj_t* sgl_unzip_img_create(sgl_obj_t *parent);
  */
 static inline void sgl_unzip_img_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
     img->desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -87,7 +87,7 @@ static inline void sgl_unzip_img_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_unzip_img_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
     img->desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -100,7 +100,7 @@ static inline void sgl_unzip_img_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_unzip_img_set_align(sgl_obj_t *obj, sgl_align_type_t align)
 {
-    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
     img->desc.align = align;
     sgl_obj_set_dirty(obj);
 }
@@ -113,7 +113,7 @@ static inline void sgl_unzip_img_set_align(sgl_obj_t *obj, sgl_align_type_t alig
  */
 static inline void sgl_unzip_img_set_img(sgl_obj_t *obj, const sgl_unzip_img_pixmap_t *unzip_img)
 {
-    sgl_unzip_img_t *img = (sgl_unzip_img_t *)obj;
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
     img->desc.unzip_img = unzip_img;
     if (img->desc.unzip_img != NULL) {
         sgl_obj_set_size(obj, img->desc.unzip_img->width, img->desc.unzip_img->height);

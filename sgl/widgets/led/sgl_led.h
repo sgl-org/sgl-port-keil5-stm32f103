@@ -66,7 +66,7 @@ sgl_obj_t* sgl_led_create(sgl_obj_t* parent);
  */
 static inline void sgl_led_set_on_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_led_t *led = (sgl_led_t *)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     led->on_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -79,7 +79,7 @@ static inline void sgl_led_set_on_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_led_t *led = (sgl_led_t *)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     led->off_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -92,7 +92,7 @@ static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_led_t *led = (sgl_led_t *)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     led->bg_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -105,7 +105,7 @@ static inline void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_led_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_led_t *led = (sgl_led_t *)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     led->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -118,7 +118,7 @@ static inline void sgl_led_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_led_set_status(sgl_obj_t *obj, bool status)
 {
-    sgl_led_t *led = (sgl_led_t *)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     led->status = status;
     sgl_obj_set_dirty(obj);
 }
@@ -130,7 +130,7 @@ static inline void sgl_led_set_status(sgl_obj_t *obj, bool status)
  */
 static inline bool sgl_led_get_status(sgl_obj_t *obj)
 {
-    sgl_led_t *led = (sgl_led_t *)obj;
+    sgl_led_t *led = sgl_container_of(obj, sgl_led_t, obj);
     return led->status;
 }
 

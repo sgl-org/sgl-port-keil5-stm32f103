@@ -1,9 +1,9 @@
-/* source/widgets/sgl_icon.c
+/* source/widgets/sgl_canvas.c
  *
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: https://sgl-docs.readthedocs.io
+ * Document reference link: docs directory
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,52 +30,38 @@
 #include <sgl_theme.h>
 #include <sgl_cfgfix.h>
 #include <string.h>
-#include "sgl_icon.h"
+#include "sgl_canvas.h"
 
 
-/**
- * @brief icon construct callback
- * @param surf pointer to surface
- * @param obj pointer to object
- * @param evt pointer to event
- * @return none
- */
-static void sgl_icon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
+static void sgl_canvas_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_icon_t *icon = sgl_container_of(obj, sgl_icon_t, obj);
-    sgl_pos_t icon_pos;
+    sgl_canvas_t *canvas = sgl_container_of(obj, sgl_canvas_t, obj);
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        icon_pos = sgl_get_icon_pos(&obj->area, icon->icon, 0, (sgl_align_type_t)icon->align);
-        sgl_draw_icon(surf, &obj->area, icon_pos.x, icon_pos.y, icon->color, icon->alpha, icon->icon);
+        SGL_ASSERT_INFO(canvas->painter != NULL, "you must set painter function");
+        canvas->painter(surf, &obj->area, obj);
     }
 }
 
-
 /**
- * @brief create icon object
- * @param parent pointer to parent object
- * @return pointer to icon object
+ * @brief create a canvas object
+ * @param parent parent of the canvas
+ * @return canvas object
  */
-sgl_obj_t* sgl_icon_create(sgl_obj_t* parent)
+sgl_obj_t* sgl_canvas_create(sgl_obj_t* parent)
 {
-    sgl_icon_t *icon = sgl_malloc(sizeof(sgl_icon_t));
-    if(icon == NULL) {
-        SGL_LOG_ERROR("sgl_icon_create: malloc failed");
+    sgl_canvas_t *canvas = sgl_malloc(sizeof(sgl_canvas_t));
+    if(canvas == NULL) {
+        SGL_LOG_ERROR("sgl_canvas_create: malloc failed");
         return NULL;
     }
 
     /* set object all member to zero */
-    memset(icon, 0, sizeof(sgl_icon_t));
+    memset(canvas, 0, sizeof(sgl_canvas_t));
 
-    sgl_obj_t *obj = &icon->obj;
-    sgl_obj_init(&icon->obj, parent);
-    obj->construct_fn = sgl_icon_construct_cb;
-
-    icon->alpha = SGL_THEME_ALPHA;
-    icon->icon = NULL;
-    icon->color = SGL_THEME_TEXT_COLOR;
-    icon->align = SGL_ALIGN_CENTER;
+    sgl_obj_t *obj = &canvas->obj;
+    sgl_obj_init(&canvas->obj, parent);
+    obj->construct_fn = sgl_canvas_construct_cb;
 
     return obj;
 }

@@ -18,6 +18,6 @@
 #define    CONFIG_SGL_HEAP_ALGO               lwmem
 #define    CONFIG_SGL_HEAP_MEMORY_SIZE        10240
 #define    CONFIG_SGL_FONT_SONG23             1
-
+											
 
 #endif  //!__CONFIG_H__

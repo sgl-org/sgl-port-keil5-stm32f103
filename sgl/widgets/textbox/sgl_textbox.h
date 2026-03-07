@@ -67,7 +67,7 @@ sgl_obj_t* sgl_textbox_create(sgl_obj_t* parent);
  */
 static inline void sgl_textbox_set_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -80,7 +80,7 @@ static inline void sgl_textbox_set_text(sgl_obj_t *obj, const char *text)
  */
 static inline void sgl_textbox_set_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->text_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -93,7 +93,7 @@ static inline void sgl_textbox_set_text_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_textbox_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -106,7 +106,7 @@ static inline void sgl_textbox_set_text_font(sgl_obj_t *obj, const sgl_font_t *f
  */
 static inline void sgl_textbox_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->bg.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -119,7 +119,7 @@ static inline void sgl_textbox_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_textbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     sgl_obj_set_radius(obj, radius);
     textbox->bg.radius = obj->radius;
     sgl_obj_set_dirty(obj);
@@ -133,7 +133,7 @@ static inline void sgl_textbox_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_textbox_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->bg.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -146,7 +146,7 @@ static inline void sgl_textbox_set_border_color(sgl_obj_t *obj, sgl_color_t colo
  */
 static inline void sgl_textbox_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->bg.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
@@ -160,7 +160,7 @@ static inline void sgl_textbox_set_border_width(sgl_obj_t *obj, uint8_t width)
  */
 static inline void sgl_textbox_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->bg.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -173,7 +173,7 @@ static inline void sgl_textbox_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pi
  */
 static inline void sgl_textbox_set_line_margin(sgl_obj_t *obj, uint8_t margin)
 {
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
+    sgl_textbox_t *textbox = sgl_container_of(obj, sgl_textbox_t, obj);
     textbox->line_margin = margin;
     sgl_obj_set_dirty(obj);
 }

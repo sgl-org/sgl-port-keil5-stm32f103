@@ -57,7 +57,7 @@ typedef struct {
     uint8_t display_count;             // data count that has been displayed
     uint32_t max_display_points;       // max display points
     uint8_t alpha;                     // aplha of waveform
-    uint8_t grid_style;                // grid line style（0-solid line，1-dashed line）
+    uint8_t grid_style;                // grid line style（0-solid line，other: dashed line
     const sgl_font_t *y_label_font;    // font of Y axis labels
     sgl_color_t y_label_color;         // color of Y axis labels
     uint32_t current_index;            // current data index
@@ -80,7 +80,7 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent);
  */
 static inline void sgl_scope_set_data_buffer(sgl_obj_t* obj, int16_t *data_buffer, uint32_t data_len)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->data_buffer = data_buffer;
     scope->data_len = data_len;
 }
@@ -103,7 +103,7 @@ void sgl_scope_append_data(sgl_obj_t* obj, int16_t value);
  */
 static inline int16_t sgl_scope_get_data(sgl_obj_t* obj, uint32_t index)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     if (index >= scope->data_len) 
         return 0;
 
@@ -118,7 +118,7 @@ static inline int16_t sgl_scope_get_data(sgl_obj_t* obj, uint32_t index)
  */
 static inline void sgl_scope_set_max_display_points(sgl_obj_t* obj, uint8_t max_points)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->max_display_points = max_points;
     sgl_obj_set_dirty(obj);
 }
@@ -131,7 +131,7 @@ static inline void sgl_scope_set_max_display_points(sgl_obj_t* obj, uint8_t max_
  */
 static inline void sgl_scope_set_waveform_color(sgl_obj_t* obj, sgl_color_t color)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->waveform_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -144,7 +144,7 @@ static inline void sgl_scope_set_waveform_color(sgl_obj_t* obj, sgl_color_t colo
  */
 static inline void sgl_scope_set_bg_color(sgl_obj_t* obj, sgl_color_t color)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->bg_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -157,7 +157,7 @@ static inline void sgl_scope_set_bg_color(sgl_obj_t* obj, sgl_color_t color)
  */
 static inline void sgl_scope_set_grid_color(sgl_obj_t* obj, sgl_color_t color)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->grid_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -171,7 +171,7 @@ static inline void sgl_scope_set_grid_color(sgl_obj_t* obj, sgl_color_t color)
  */
 static inline void sgl_scope_set_range(sgl_obj_t* obj, uint16_t min_value, uint16_t max_value)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->min_value = min_value;
     scope->max_value = max_value;
     scope->auto_scale = 0;  // disable auto scale
@@ -186,7 +186,7 @@ static inline void sgl_scope_set_range(sgl_obj_t* obj, uint16_t min_value, uint1
  */
 static inline void sgl_scope_set_line_width(sgl_obj_t* obj, uint8_t width)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->line_width = width;
     sgl_obj_set_dirty(obj);
 }
@@ -199,7 +199,7 @@ static inline void sgl_scope_set_line_width(sgl_obj_t* obj, uint8_t width)
  */
 static inline void sgl_scope_enable_auto_scale(sgl_obj_t* obj, bool enable)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->auto_scale = (uint8_t)enable;
     sgl_obj_set_dirty(obj);
 }
@@ -212,7 +212,7 @@ static inline void sgl_scope_enable_auto_scale(sgl_obj_t* obj, bool enable)
  */
 static inline void sgl_scope_set_alpha(sgl_obj_t* obj, uint8_t alpha)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -225,7 +225,7 @@ static inline void sgl_scope_set_alpha(sgl_obj_t* obj, uint8_t alpha)
  */
 static inline void sgl_scope_show_y_labels(sgl_obj_t* obj, bool show)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->show_y_labels = (uint8_t)show;
     sgl_obj_set_dirty(obj);
 }
@@ -238,7 +238,7 @@ static inline void sgl_scope_show_y_labels(sgl_obj_t* obj, bool show)
  */
 static inline void sgl_scope_set_y_label_font(sgl_obj_t* obj, const sgl_font_t *font)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->y_label_font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -251,7 +251,7 @@ static inline void sgl_scope_set_y_label_font(sgl_obj_t* obj, const sgl_font_t *
  */
 static inline void sgl_scope_set_y_label_color(sgl_obj_t* obj, sgl_color_t color)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->y_label_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -264,7 +264,7 @@ static inline void sgl_scope_set_y_label_color(sgl_obj_t* obj, sgl_color_t color
  */
 static inline void sgl_scope_set_border_color(sgl_obj_t* obj, sgl_color_t color)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -277,22 +277,22 @@ static inline void sgl_scope_set_border_color(sgl_obj_t* obj, sgl_color_t color)
  */
 static inline void sgl_scope_set_border_width(sgl_obj_t* obj, uint8_t width)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
     scope->border_width = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 
 /**
- * @brief set scope grid style
+ * @brief set scope grid line
  * @param obj scope object
- * @param style grid style, 0-solid line，1-dashed line
+ * @param style grid size, 0: solid line，other: dashed line
  * @return none
  */
-static inline void sgl_scope_set_grid_style(sgl_obj_t* obj, uint8_t style)
+static inline void sgl_scope_set_grid_line(sgl_obj_t* obj, uint8_t grid)
 {
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
-    scope->grid_style = style;
+    sgl_scope_t *scope = sgl_container_of(obj, sgl_scope_t, obj);
+    scope->grid_style = grid;
     sgl_obj_set_dirty(obj);
 }
 

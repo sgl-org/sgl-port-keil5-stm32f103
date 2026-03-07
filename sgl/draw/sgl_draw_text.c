@@ -70,6 +70,9 @@ static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len
 {
     uint8_t bit_mask;
     switch(len) {
+        case 1:
+            bit_mask = 0x1;
+            break;
         case 2:
             bit_mask = 0x3;
             break;
@@ -239,6 +242,11 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
                     shift = (3 - (pixel_index & 0x3)) * 2;
                     alpha_dot = sgl_opa2_table[(dot[byte_index] >> shift) & 0x03];
                 }
+                else if (font->bpp == 1) {
+                    byte_index = pixel_index >> 3;
+                    shift = 7 - (pixel_index & 0x7);
+                    alpha_dot = ((dot[byte_index] >> shift) & 0x01) ? SGL_ALPHA_MAX : SGL_ALPHA_MIN;
+                }
 
                 color_mix = sgl_color_mixer(color, *blend, alpha_dot);
                 *blend = sgl_color_mixer(color_mix, *blend, alpha);
@@ -266,6 +274,9 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
                 }
                 else if (font->bpp == 2) {
                     color_mix = sgl_color_mixer(color, *blend, sgl_opa2_table[line_buf[x - text_rect.x1]]);
+                }
+                else if (font->bpp == 1) {
+                    color_mix = sgl_color_mixer(color, *blend, line_buf[x - text_rect.x1] ? SGL_ALPHA_MAX : SGL_ALPHA_MIN);
                 }
                 *blend = sgl_color_mixer(color_mix, *blend, alpha);
                 blend++;

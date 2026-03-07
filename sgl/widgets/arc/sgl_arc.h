@@ -57,7 +57,7 @@ sgl_obj_t* sgl_arc_create(sgl_obj_t* parent);
  */
 static inline void sgl_arc_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     arc->desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -70,7 +70,7 @@ static inline void sgl_arc_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_arc_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     arc->desc.bg_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -83,7 +83,7 @@ static inline void sgl_arc_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_arc_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     arc->desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -97,7 +97,7 @@ static inline void sgl_arc_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_arc_set_radius(sgl_obj_t *obj, int16_t radius_in, int16_t radius_out)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     sgl_obj_set_radius(obj, radius_out);
     arc->desc.radius_in = radius_in;
     arc->desc.radius_out = obj->radius;
@@ -112,7 +112,7 @@ static inline void sgl_arc_set_radius(sgl_obj_t *obj, int16_t radius_in, int16_t
  */
 static inline void sgl_arc_set_mode(sgl_obj_t *obj, uint8_t mode)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     arc->desc.mode = mode;
     sgl_obj_set_dirty(obj);
 }
@@ -126,7 +126,7 @@ static inline void sgl_arc_set_mode(sgl_obj_t *obj, uint8_t mode)
  */
 static inline void sgl_arc_set_start_angle(sgl_obj_t *obj, int16_t angle)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     arc->desc.start_angle = angle;
     sgl_obj_set_dirty(obj);
 }
@@ -140,7 +140,7 @@ static inline void sgl_arc_set_start_angle(sgl_obj_t *obj, int16_t angle)
  */
 static inline void sgl_arc_set_end_angle(sgl_obj_t *obj, int16_t angle)
 {
-    sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_arc_t *arc = sgl_container_of(obj, sgl_arc_t, obj);
     arc->desc.end_angle = angle;
     sgl_obj_set_dirty(obj);
 }

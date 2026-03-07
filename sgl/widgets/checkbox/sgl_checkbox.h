@@ -60,7 +60,7 @@ sgl_obj_t* sgl_checkbox_create(sgl_obj_t* parent);
  */
 static inline void sgl_checkbox_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t *)obj;
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     checkbox->color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -73,7 +73,7 @@ static inline void sgl_checkbox_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_checkbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t *)obj;
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     checkbox->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -86,7 +86,7 @@ static inline void sgl_checkbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_checkbox_set_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t *)obj;
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     checkbox->text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -99,7 +99,7 @@ static inline void sgl_checkbox_set_text(sgl_obj_t *obj, const char *text)
  */
 static inline void sgl_checkbox_set_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t *)obj;
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     checkbox->font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -112,7 +112,7 @@ static inline void sgl_checkbox_set_font(sgl_obj_t *obj, const sgl_font_t *font)
  */
 static inline void sgl_checkbox_set_status(sgl_obj_t *obj, bool status)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t *)obj;
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     checkbox->status = status;
     sgl_obj_set_dirty(obj);
 }
@@ -124,7 +124,7 @@ static inline void sgl_checkbox_set_status(sgl_obj_t *obj, bool status)
  */
 static inline bool sgl_checkbox_get_status(sgl_obj_t *obj)
 {
-    sgl_checkbox_t *checkbox = (sgl_checkbox_t *)obj;
+    sgl_checkbox_t *checkbox = sgl_container_of(obj, sgl_checkbox_t, obj);
     return checkbox->status;
 }
 

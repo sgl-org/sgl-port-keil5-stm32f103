@@ -42,7 +42,7 @@
  */
 static void sgl_rectangle_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_rectangle_t *rect = (sgl_rectangle_t*)obj;
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
     sgl_draw_rect_t desc = {
         .color = rect->color,
         .alpha = rect->alpha,

@@ -59,7 +59,7 @@ sgl_obj_t* sgl_icon_create(sgl_obj_t* parent);
  */
 static inline void sgl_icon_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_icon_t *icon = (sgl_icon_t *)obj;
+    sgl_icon_t *icon = sgl_container_of(obj, sgl_icon_t, obj);
     icon->color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -72,7 +72,7 @@ static inline void sgl_icon_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_icon_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_icon_t *icon = (sgl_icon_t *)obj;
+    sgl_icon_t *icon = sgl_container_of(obj, sgl_icon_t, obj);
     icon->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -85,7 +85,7 @@ static inline void sgl_icon_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_icon_set_icon(sgl_obj_t *obj, const sgl_icon_pixmap_t *icon)
 {
-    sgl_icon_t *icon_obj = (sgl_icon_t *)obj;
+    sgl_icon_t *icon_obj = sgl_container_of(obj, sgl_icon_t, obj);
     icon_obj->icon = icon;
     sgl_obj_set_dirty(obj);
 }
@@ -98,7 +98,7 @@ static inline void sgl_icon_set_icon(sgl_obj_t *obj, const sgl_icon_pixmap_t *ic
  */
 static inline void sgl_icon_set_align(sgl_obj_t *obj, sgl_align_type_t align)
 {
-    sgl_icon_t *icon_obj = (sgl_icon_t *)obj;
+    sgl_icon_t *icon_obj = sgl_container_of(obj, sgl_icon_t, obj);
     icon_obj->align = align;
     sgl_obj_set_dirty(obj);
 }

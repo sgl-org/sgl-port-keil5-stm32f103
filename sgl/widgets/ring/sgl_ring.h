@@ -65,7 +65,7 @@ sgl_obj_t* sgl_ring_create(sgl_obj_t* parent);
  */
 static inline void sgl_ring_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_ring_t *ring = (sgl_ring_t*)obj;
+    sgl_ring_t *ring = sgl_container_of(obj, sgl_ring_t, obj);
     ring->color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -79,7 +79,7 @@ static inline void sgl_ring_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_ring_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_ring_t *ring = (sgl_ring_t*)obj;
+    sgl_ring_t *ring = sgl_container_of(obj, sgl_ring_t, obj);
     ring->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -93,7 +93,7 @@ static inline void sgl_ring_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_ring_set_radius(sgl_obj_t *obj, uint16_t radius_in, uint16_t radius_out)
 {
-    sgl_ring_t *ring = (sgl_ring_t*)obj;
+    sgl_ring_t *ring = sgl_container_of(obj, sgl_ring_t, obj);
     ring->radius_in = radius_in;
     sgl_obj_set_radius(obj, radius_out);
     ring->radius_out = obj->radius;

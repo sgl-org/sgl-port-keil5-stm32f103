@@ -34,7 +34,7 @@
 
 static void sgl_textline_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_textline_t *textline = (sgl_textline_t*)obj;
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
     sgl_area_t text_area;
     SGL_ASSERT(textline->font != NULL);
 
@@ -82,6 +82,7 @@ sgl_obj_t* sgl_textline_create(sgl_obj_t* parent)
     textline->color = SGL_THEME_TEXT_COLOR;
     textline->line_margin = 1;
     textline->text = "textline";
+    textline->font = sgl_get_system_font();
 
     return obj;
 }

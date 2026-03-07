@@ -83,7 +83,7 @@ void sgl_draw_fill_circle(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_
     }
 }
 
-
+#if (!CONFIG_SGL_PIXMAP_BILINEAR_INTERP)
 /**
  * @brief Draw a circle with pixmap and alpha
  * @param surf Surface
@@ -116,20 +116,20 @@ void sgl_draw_fill_circle_pixmap(sgl_surf_t *surf, sgl_area_t *area, int16_t cx,
         return;
     }
 
-    uint32_t scale_x = (pixmap->width << 10) / (radius * 2);
-    uint32_t scale_y = (pixmap->height << 10) / (radius * 2);
+    uint32_t scale_x = (pixmap->width << SGL_FIXED_SHIFT) / (radius * 2);
+    uint32_t scale_y = (pixmap->height << SGL_FIXED_SHIFT) / (radius * 2);
     uint32_t step_x = 0, step_y = 0;
 
     buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
         blend = buf;
         y2 = sgl_pow2(y - cy);
-        step_y = (scale_y * (y - s_y)) >> 10;
+        step_y = (scale_y * (y - s_y)) >> SGL_FIXED_SHIFT;
 
         for (int x = clip.x1; x <= clip.x2; x++, blend++) {
             real_r2 = sgl_pow2(x - cx) + y2;
 
-            step_x = (scale_x * (x - s_x)) >> 10;
+            step_x = (scale_x * (x - s_x)) >> SGL_FIXED_SHIFT;
             pbuf = sgl_pixmap_get_buf(pixmap, step_x, step_y);
 
             if (real_r2 >= r2_max) {
@@ -148,7 +148,61 @@ void sgl_draw_fill_circle_pixmap(sgl_surf_t *surf, sgl_area_t *area, int16_t cx,
         buf += surf->w;
     }
 }
+#else
+void sgl_draw_fill_circle_pixmap(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t cy, int16_t radius, const sgl_pixmap_t *pixmap, uint8_t alpha)
+{
+    int y2 = 0, real_r2 = 0, s_x = cx - radius, s_y = cy - radius;
+    int r2 = radius * radius;
+    int r2_max = (radius + 1) * (radius + 1);
+    sgl_color_t *buf = NULL, *blend = NULL, ip_color, *pix = (sgl_color_t *)pixmap->bitmap.array;
+    sgl_area_t clip = SGL_AREA_MAX;
+    uint8_t edge_alpha = 0;
+    int fx = 0, fy = 0;
 
+    sgl_surf_clip_area_return(surf, area, &clip);
+
+    sgl_area_t c_rect = {
+        .x1 = cx - radius,
+        .x2 = cx + radius,
+        .y1 = cy - radius,
+        .y2 = cy + radius
+    };
+    if (!sgl_area_selfclip(&clip, &c_rect)) {
+        return;
+    }
+
+    const int32_t scale_x = ((int32_t)pixmap->width << SGL_FIXED_SHIFT) / (radius * 2);
+    const int32_t scale_y = ((int32_t)pixmap->height << SGL_FIXED_SHIFT) / (radius * 2);
+
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
+    for (int y = clip.y1; y <= clip.y2; y++) {
+        blend = buf;
+        y2 = sgl_pow2(y - cy);
+        fy = (int32_t)(y - s_y) * scale_y;
+
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
+            real_r2 = sgl_pow2(x - cx) + y2;
+
+            fx = (int32_t)(x - s_x) * scale_x;
+            ip_color = sgl_draw_biln_color(pix, pixmap->width, pixmap->height, fx, fy);
+
+            if (real_r2 >= r2_max) {
+                if(x > cx)
+                    break;
+                continue;
+            }
+            else if (real_r2 >= r2) {
+                edge_alpha = SGL_ALPHA_MAX - sgl_sqrt_error(real_r2);
+                *blend = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(ip_color, *blend, edge_alpha) : sgl_color_mixer(sgl_color_mixer(ip_color, *blend, edge_alpha), *blend, alpha));
+            }
+            else {
+                *blend = (alpha == SGL_ALPHA_MAX ? ip_color : sgl_color_mixer(ip_color, *blend, alpha));
+            }
+        }
+        buf += surf->w;
+    }
+}
+#endif // CONFIG_SGL_PIXMAP_BILINEAR_INTERP
 
 /**
  * @brief Draw a circle with alpha and border

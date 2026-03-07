@@ -23,12 +23,13 @@
  */
 
 #include <stdio.h>
+#include <limits.h>
 #include <sgl_theme.h>
 #include "sgl_scope.h"
 
 
 // Draw a dashed line using Bresenham's algorithm with dash pattern
-static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int16_t y0, int16_t x1, int16_t y1, sgl_color_t color)
+static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t gap, sgl_color_t color)
 {
     int16_t dx = sgl_abs(x1 - x0);
     int16_t dy = sgl_abs(y1 - y0);
@@ -36,9 +37,7 @@ static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int
     int16_t sy = (y0 < y1) ? 1 : -1;
     int16_t err = dx - dy;
     int16_t e2;
-
     int16_t dash_len = 0;
-    const int16_t dash_pattern = 5; // Length of each dash segment
 
     sgl_area_t clip_area = {
         .x1 = surf->x1,
@@ -51,14 +50,14 @@ static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int
 
     while (1) {
         // Draw dash segment
-        if (dash_len < dash_pattern) {
+        if (dash_len < gap) {
             // Check if point is within clipping area
             if (x0 >= clip_area.x1 && x0 <= clip_area.x2 && y0 >= clip_area.y1 && y0 <= clip_area.y2) {
                 sgl_color_t *buf = sgl_surf_get_buf(surf, x0 - surf->x1, y0 - surf->y1);
                 *buf = color;
             }
             dash_len++;
-        } else if (dash_len < 2 * dash_pattern) {
+        } else if (dash_len < 2 * gap) {
             // Skip drawing (gap segment)
             dash_len++;
         } else {
@@ -189,8 +188,8 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         // Skip drawing if object is completely outside screen bounds
-        if (obj->area.x2 < surf->x1 || obj->area.x1 >= surf->x2 ||
-            obj->area.y2 < surf->y1 || obj->area.y1 >= surf->y2) {
+        if (obj->area.x2 < surf->x1 || obj->area.x1 > surf->x2 ||
+            obj->area.y2 < surf->y1 || obj->area.y1 > surf->y2) {
             return; // Object is fully off-screen; no need to draw
         }
 
@@ -205,25 +204,46 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         sgl_draw_rect(surf, &obj->area, &obj->coords, &bg_rect);
 
         // Compute waveform display parameters
-        uint16_t display_min = scope->min_value;
-        uint16_t display_max = scope->max_value;
+        int16_t display_min = scope->min_value;
+        int16_t display_max = scope->max_value;
+        int16_t actual_min = display_min;  // Actual min/max of waveform data (for labels)
+        int16_t actual_max = display_max;  // Actual max of waveform data (for labels)
         
-        // If auto-scaling is enabled, use runtime min/max values
+        // If auto-scaling is enabled, recalculate min/max from current buffer data
         if (scope->auto_scale) {
-            display_min = scope->running_min;
-            display_max = scope->running_max;
+            // Recalculate running_min and running_max based on current data in buffer
+            if (scope->display_count > 0) {
+                display_min = scope->data_buffer[0];
+                display_max = scope->data_buffer[0];
+                
+                // Iterate through all data points in buffer to find min/max
+                uint32_t end_index = (scope->display_count < scope->data_len) ? scope->display_count : scope->data_len;
+                for (uint32_t i = 0; i < end_index; i++) {
+                    int16_t val = scope->data_buffer[i];
+                    if (val < display_min) display_min = val;
+                    if (val > display_max) display_max = val;
+                }
+                
+                // Save actual data min/max for label display
+                actual_min = display_min;
+                actual_max = display_max;
+                
+                // Update running values for next frame
+                scope->running_min = display_min;
+                scope->running_max = display_max;
+            }
             
             // Add margin to prevent waveform from touching borders
-            uint16_t margin = (display_max - display_min) / 10;
+            int32_t margin = (int32_t)(display_max - display_min) / 10;
             if (margin == 0) margin = 1;
             
-            display_min = (display_min > margin) ? display_min - margin : 0;
-            display_max = (display_max + margin < 0xFFFF) ? display_max + margin : 0xFFFF;
+            display_min = (display_min > INT16_MIN + margin) ? display_min - margin : INT16_MIN;
+            display_max = (display_max < INT16_MAX - margin) ? display_max + margin : INT16_MAX;
         }
         
         // Avoid division by zero if min equals max
         if (display_min == display_max) {
-            if (display_max < 0xFFFF) {
+            if (display_max < INT16_MAX) {
                 display_max++;
             } else {
                 display_min--;
@@ -237,18 +257,18 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         int16_t y_center = obj->coords.y1 + (int32_t)(height * (display_max - (display_min + display_max) / 2)) / (display_max - display_min);
         
         // Draw horizontal center line (midpoint of display range)
-        if (scope->grid_style == 1) {
+        if (scope->grid_style) {
             // Draw dashed line
-            draw_dashed_line(surf, &obj->area, obj->coords.x1, y_center, obj->coords.x2, y_center, scope->grid_color);
+            draw_dashed_line(surf, &obj->area, obj->coords.x1, y_center, obj->coords.x2, y_center, scope->grid_style, scope->grid_color);
         } else {
             // Draw solid line
             sgl_draw_fill_hline(surf, &obj->area, y_center, obj->coords.x1, obj->coords.x2, 1, scope->grid_color, scope->alpha);
         }
 
         // Draw vertical center line
-        if (scope->grid_style == 1) {
+        if (scope->grid_style) {
             // Draw dashed line
-            draw_dashed_line(surf, &obj->area, x_center, obj->coords.y1, x_center, obj->coords.y2, scope->grid_color);
+            draw_dashed_line(surf, &obj->area, x_center, obj->coords.y1, x_center, obj->coords.y2, scope->grid_style, scope->grid_color);
         } else {
             // Draw solid line
             sgl_draw_fill_vline(surf, &obj->area, x_center, obj->coords.y1, obj->coords.y2, 1, scope->grid_color, scope->alpha);
@@ -258,9 +278,9 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         for (int i = 1; i < 10; i++) {
             int16_t x_pos = obj->coords.x1 + (width * i / 10);
 
-            if (scope->grid_style == 1) {
+            if (scope->grid_style) {
                 // Draw dashed line
-                draw_dashed_line(surf, &obj->area, x_pos, obj->coords.y1, x_pos, obj->coords.y2, scope->grid_color);
+                draw_dashed_line(surf, &obj->area, x_pos, obj->coords.y1, x_pos, obj->coords.y2, scope->grid_style, scope->grid_color);
             } else {
                 // Draw solid line
                 sgl_draw_fill_vline(surf, &obj->area, x_pos, obj->coords.y1, obj->coords.y2, 1, scope->grid_color, scope->alpha);
@@ -270,9 +290,9 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         // Draw horizontal grid lines (10 divisions)
         for (int i = 1; i < 10; i++) {
             int16_t y_pos = obj->coords.y1 + (height * i / 10); 
-            if (scope->grid_style == 1) {
+            if (scope->grid_style) {
                 // Draw dashed line
-                draw_dashed_line(surf, &obj->area, obj->coords.x1, y_pos, obj->coords.x2, y_pos, scope->grid_color);
+                draw_dashed_line(surf, &obj->area, obj->coords.x1, y_pos, obj->coords.x2, y_pos, scope->grid_style, scope->grid_color);
             } else {
                 // Draw solid line
                 sgl_draw_fill_hline(surf, &obj->area, y_pos, obj->coords.x1, obj->coords.x2, 1, scope->grid_color, scope->alpha);
@@ -305,7 +325,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             for (uint32_t i = 1; i < data_points; i++) {
                 //int index = (scope->current_index >= i) ? scope->current_index - i : scope->data_len - (i - scope->current_index);
                 uint32_t prev_index = (scope->current_index >= i + 1) ? scope->current_index - (i + 1) : scope->data_len - (i + 1 - scope->current_index);
-                
+
                 int16_t current_value = scope->data_buffer[prev_index];
 
                 // Clamp value to display range
@@ -332,18 +352,19 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
 
             sgl_area_selfclip(&text_area, &obj->area);
             
-            // Display maximum value
-            sprintf(label_text, "%u", display_max);
+            // Display actual maximum value of waveform data
+            sprintf(label_text, "%d", actual_max);
             sgl_draw_string(surf, &text_area, obj->coords.x1 + 2, obj->coords.y1 + 2, 
                            label_text, scope->y_label_color, scope->alpha, scope->y_label_font);
             
-            // Display minimum value
-            sprintf(label_text, "%u", display_min);
+            // Display actual minimum value of waveform data
+            sprintf(label_text, "%d", actual_min);
             sgl_draw_string(surf, &text_area, obj->coords.x1 + 2, obj->coords.y2 - scope->y_label_font->font_height - 2, 
                            label_text, scope->y_label_color, scope->alpha, scope->y_label_font);
             
-            // Display mid-range value
-            uint16_t mid_value = (display_max + display_min) / 2;
+            // Display mid-range value of actual waveform
+            int16_t mid_value = (actual_max + actual_min) / 2;
+            sprintf(label_text, "%d", mid_value);
             sprintf(label_text, "%u", mid_value);
             sgl_draw_string(surf, &text_area, obj->coords.x1 + 2, y_center - scope->y_label_font->font_height/2, 
                            label_text, scope->y_label_color, scope->alpha, scope->y_label_font);
@@ -375,8 +396,8 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent)
     scope->border_color = sgl_rgb(150, 150, 150); // Light gray outer border
     scope->min_value = 0;
     scope->max_value = 0xFFFF;
-    scope->running_min = 0xFFFF;  // Initialize runtime minimum
-    scope->running_max = 0;       // Initialize runtime maximum
+    scope->running_min = INT16_MAX;   // Initialize runtime minimum to max int16_t value
+    scope->running_max = INT16_MIN;   // Initialize runtime maximum to min int16_t value
     scope->auto_scale = 1;        // Enable auto-scaling by default
     scope->line_width = 2;        // Default line thickness
     scope->max_display_points = 0; // Display all points by default
@@ -401,13 +422,9 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent)
 void sgl_scope_append_data(sgl_obj_t* obj, int16_t value)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    
-    // update the auto scale only if the auto_scale is enabled
-    if (scope->auto_scale) {
-        if (value < scope->running_min) scope->running_min = value;
-        if (value > scope->running_max) scope->running_max = value;
-    }
 
+    // Simply append the data point to the buffer
+    // Min/max will be recalculated during drawing if auto-scale is enabled
     scope->data_buffer[scope->current_index] = value;
 
     if (sgl_is_pow2(scope->data_len)) {

@@ -35,14 +35,15 @@
 
 static void sgl_progress_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_progress_t *progress = (sgl_progress_t*)obj;
+    sgl_progress_t *progress = sgl_container_of(obj, sgl_progress_t, obj);
     sgl_area_t knob = obj->coords;
-    knob.x1 = obj->coords.x1 + obj->radius / 2 + 2;
+    knob.x1 = obj->coords.x1 + obj->radius / 2 + obj->border;
+    int16_t fill_radius;
     sgl_area_t rect = {
-        .x1 = obj->coords.x1 - progress->interval * 2 + progress->shift,
-        .y1 = obj->coords.y1 + 1,
+        .x1 = obj->coords.x1 - progress->interval * 2 + progress->shift + obj->border + 1,
+        .y1 = obj->coords.y1 + obj->border + 1,
         .x2 = 0,
-        .y2 = obj->coords.y2 - 1,
+        .y2 = obj->coords.y2 - obj->border - 1,
     };
 
     if (progress->shift > (progress->interval + progress->knob_width)) {
@@ -51,12 +52,13 @@ static void sgl_progress_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         knob.x2 = obj->coords.x1 - obj->radius / 2 - 2 + (obj->coords.x2 - obj->coords.x1) * progress->value / 100;
-
+        knob.x2 -= obj->border - 1;
         sgl_draw_rect(surf, &obj->area, &obj->coords, &progress->body);
 
+        fill_radius = sgl_min3(obj->radius, progress->knob_radius, progress->knob_width / 2);
         while (rect.x2 <= knob.x2) {
             rect.x2 = rect.x1 + progress->knob_width;
-            sgl_draw_fill_rect(surf, &knob, &rect, progress->knob_radius, progress->color, progress->alpha);
+            sgl_draw_fill_rect(surf, &knob, &rect, fill_radius, progress->color, progress->alpha);
             rect.x1 = rect.x2 + progress->interval;
         }
     }
@@ -81,8 +83,6 @@ sgl_obj_t* sgl_progress_create(sgl_obj_t* parent)
 
     sgl_obj_t *obj = &progress->obj;
     sgl_obj_init(&progress->obj, parent);
-    sgl_obj_set_clickable(obj);
-    sgl_obj_set_movable(obj);
     obj->construct_fn = sgl_progress_construct_cb;
     sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 

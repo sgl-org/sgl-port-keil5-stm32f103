@@ -1602,7 +1602,6 @@ void sgl_task_handle_sync(void)
 #if (CONFIG_SGL_ANIMATION)
     sgl_anim_task();
 #endif // !CONFIG_SGL_ANIMATION
-    sgl_tick_reset();
 
     /* foreach all object tree and calculate dirty area */
     sgl_dirty_area_calculate(sgl_system.fbdev.active);

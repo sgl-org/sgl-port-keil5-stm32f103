@@ -476,11 +476,17 @@ typedef struct sgl_fbdev {
 /**
  * @brief sgl log print device struct
  * @logdev: log print callback function pointer
+ * @fbdev: framebuffer device
+ * @last_tick: last tick time, ms
  * @tick_ms: tick milliseconds
+ * @font: system default font
+ * @rotation: buffer only for rotation
+ * @angle: angle value only for rotation
  */
 typedef struct sgl_system {
     void               (*logdev)(const char *str);
     sgl_fbdev_t        fbdev;
+    volatile uint32_t  last_tick;
     volatile uint32_t  tick_ms;
     const sgl_font_t   *font;
 #if (CONFIG_SGL_FBDEV_ROTATION != 0)
@@ -765,9 +771,20 @@ uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap);
  * @param none
  * @return tick milliseconds
  */
-static inline uint8_t sgl_tick_get(void)
+static inline uint32_t sgl_tick_get(void)
 {
     return sgl_system.tick_ms;
+}
+
+
+/**
+ * @brief get last tick milliseconds
+ * @param none
+ * @return tick milliseconds
+ */
+static inline uint32_t sgl_last_tick_get(void)
+{
+    return sgl_system.last_tick;
 }
 
 
@@ -778,9 +795,20 @@ static inline uint8_t sgl_tick_get(void)
  * @note in general, you should call this function in the 1ms tick interrupt handler
  *       of course, you can use polling function to increase tick milliseconds.
  */
-static inline void sgl_tick_inc(uint8_t ms)
+static inline void sgl_tick_inc(uint32_t ms)
 {
     sgl_system.tick_ms += ms;
+}
+
+
+/**
+ * @brief sync tick milliseconds
+ * @param none
+ * @return none
+ */
+static inline void sgl_tick_sync(void)
+{
+    sgl_system.last_tick = sgl_system.tick_ms;
 }
 
 
@@ -1690,10 +1718,11 @@ void sgl_task_handle_sync(void);
 static inline void sgl_task_handle(void)
 {
     /* If the system tick time has not been reached, skip directly. */
-    if (sgl_tick_get() < SGL_SYSTEM_TICK_MS) {
+    if ((sgl_tick_get() - sgl_last_tick_get()) < SGL_SYSTEM_TICK_MS) {
         return;
     }
 
+    sgl_tick_sync();
     /* If the system tick time has been reached, execute the task. */
     sgl_task_handle_sync();
 }

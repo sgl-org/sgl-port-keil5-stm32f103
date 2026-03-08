@@ -53,16 +53,13 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
  *
  * This structure holds all the necessary state and configuration for an animation,
  * including timing parameters, value interpolation, callbacks, and linkage in a list.
- * All time values (act_time, act_delay, act_duration) are in milliseconds.
+ * All time values (act_delay, act_duration) are in milliseconds.
  *
  * @data:      Pointer to user-defined private data associated with this animation.
  *             Not used internally by the animation engine; intended for application use.
  * 
  * @next:      Pointer to the next animation in a singly-linked list.
  *             Used internally by the animation scheduler to chain active animations.
- * 
- * @act_time:  The current elapsed time (in ms) since the animation started (excluding delay).
- *             Updated automatically during each animation tick.
  * 
  * @act_delay: Delay time (in ms) before the animation starts after being added to the system.
  *             The animation will not progress until this delay has elapsed.
@@ -97,7 +94,6 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
 typedef struct sgl_anim {
     void                  *data;
     struct sgl_anim       *next;
-    uint32_t              act_time;
     uint32_t              act_delay;
     uint32_t              act_duration;
     int32_t               start_value;
@@ -115,13 +111,10 @@ typedef struct sgl_anim {
  * @brief animation context, it will be used to store status of animation
  * @anim_list_head: animation list head
  * @anim_list_tail: animation list tail
- * @anim_cnt:       animation count
- * @tick_ms:        animation tick, ms
  */
 typedef struct sgl_anim_ctx {
     sgl_anim_t *anim_list_head;
     sgl_anim_t *anim_list_tail;
-    uint32_t    anim_cnt;
 } sgl_anim_ctx_t;
 
 
@@ -153,37 +146,12 @@ sgl_anim_t* sgl_anim_create(void);
 
 
 /**
- * @brief add animation object to animation list
- * @param  anim animation object
- * @return none
-*/
-void sgl_anim_add(sgl_anim_t *anim);
-
-
-/**
- * @brief remove animation object from animation list
- * @param  anim animation object
- * @return none
-*/
-void sgl_anim_remove(sgl_anim_t *anim);
-
-
-/**
  * @brief start animation
  * @param  anim animation object
  * @para  repeat_cnt repeat count of animation
  * @return none
 */
-static inline void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt)
-{
-    SGL_ASSERT(anim != NULL);
-    if (anim->finished && repeat_cnt) {
-        sgl_anim_add(anim);
-        anim->finished = 0;
-    }
-    anim->act_time = 0;
-    anim->repeat_cnt = repeat_cnt & SGL_ANIM_REPEAT_LOOP;
-}
+void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt);
 
 
 /**
@@ -191,14 +159,7 @@ static inline void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt)
  * @param  anim animation object
  * @return none
 */
-static inline void sgl_anim_stop(sgl_anim_t *anim)
-{
-    SGL_ASSERT(anim != NULL);
-    if (!anim->finished) {
-        sgl_anim_remove(anim);
-        anim->finished = 1;
-    }
-}
+void sgl_anim_stop(sgl_anim_t *anim);
 
 
 /**
@@ -206,14 +167,7 @@ static inline void sgl_anim_stop(sgl_anim_t *anim)
  * @param anim animation object
  * @return none
 */
-static inline void sgl_anim_delete(sgl_anim_t *anim)
-{
-    SGL_ASSERT(anim != NULL);
-    if (!anim->finished) {
-        sgl_anim_stop(anim);
-    } 
-    sgl_free(anim);
-}
+void sgl_anim_delete(sgl_anim_t *anim);
 
 
 /**
@@ -279,7 +233,7 @@ static inline void sgl_anim_set_end_value(sgl_anim_t *anim, int32_t value)
 static inline void sgl_anim_set_act_delay(sgl_anim_t *anim, uint32_t delay_ms)
 {
     SGL_ASSERT(anim != NULL);
-    anim->act_delay = delay_ms;
+    anim->act_delay = sgl_tick_get() + delay_ms;
 }
 
 

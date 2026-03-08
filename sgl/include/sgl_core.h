@@ -423,12 +423,14 @@ typedef struct sgl_obj {
  * Members:
  * - obj      : Base object (inherits sgl_obj_t), providing position, size, visibility, etc.
  * - color    : Default background color used when no pixmap is set.
+ * - alpha    : Alpha value for the background color (0-255).
  * - pixmap   : Optional pointer to a background pixmap. If non-NULL, it typically overrides 'color'
  *              as the background content during rendering (behavior depends on flush/render logic).
  */
 typedef struct sgl_page {
     sgl_obj_t          obj;
     sgl_color_t        color;
+    uint8_t            alpha;
     const sgl_pixmap_t *pixmap;
 } sgl_page_t;
 
@@ -2057,6 +2059,15 @@ void sgl_page_set_color(sgl_obj_t* obj, sgl_color_t color);
  * @return none
  */
 void sgl_page_set_pixmap(sgl_obj_t* obj, const sgl_pixmap_t *pixmap);
+
+
+/**
+ * @brief set page background alpha
+ * @param obj point to object
+ * @param alpha background alpha
+ * @return none
+ */
+void sgl_page_set_alpha(sgl_obj_t* obj, uint8_t alpha);
 
 
 /**

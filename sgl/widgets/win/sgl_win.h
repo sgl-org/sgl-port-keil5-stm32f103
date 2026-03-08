@@ -47,7 +47,7 @@ typedef struct sgl_win {
     uint8_t         title_h;
     uint8_t         title_align;
     sgl_color_t     close_color;
-}sgl_win_t;
+} sgl_win_t;
 
 /**
  * @brief create a window object
@@ -132,9 +132,11 @@ static inline void sgl_win_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap
  */
 static inline void sgl_win_set_title_text(sgl_obj_t *obj, const char *text)
 {
+    sgl_area_t area = obj->area;
     sgl_win_t *win = sgl_container_of(obj, sgl_win_t, obj);
     win->title_text = text;
-    sgl_obj_set_dirty(obj);
+    area.y2 = area.y1 + win->title_h;
+    sgl_obj_update_area(&area);
 }
 
 /**

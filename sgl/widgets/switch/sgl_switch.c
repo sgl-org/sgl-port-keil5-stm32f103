@@ -36,10 +36,13 @@
 static void sgl_switch_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_switch_t *p_switch = sgl_container_of(obj, sgl_switch_t, obj);
-    int16_t width = obj->coords.y2 - obj->coords.y1 - 2 * obj->border;
+    int16_t margin = p_switch->knob_margin + obj->border;
+    int16_t radius = sgl_min(obj->radius - margin, p_switch->knob_radius);
+    int16_t width = obj->coords.y2 - obj->coords.y1 - 2 * margin;
+
     sgl_rect_t knob_rect = { 
-        .y1 = obj->coords.y1 + obj->border,
-        .y2 = obj->coords.y2 - obj->border,
+        .y1 = obj->coords.y1 + margin,
+        .y2 = obj->coords.y2 - margin,
     };
 
     sgl_draw_rect_t bg_desc = {
@@ -54,17 +57,17 @@ static void sgl_switch_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         if(p_switch->status) {
             bg_desc.color = p_switch->color;
-            knob_rect.x2 = obj->coords.x2 - obj->border;
+            knob_rect.x2 = obj->coords.x2 - margin;
             knob_rect.x1 = knob_rect.x2 - width;
         }
         else {
             bg_desc.color = p_switch->bg_color;
-            knob_rect.x1 = obj->coords.x1 + obj->border;
+            knob_rect.x1 = obj->coords.x1 + margin;
             knob_rect.x2 = knob_rect.x1 + width;
         }
 
         sgl_draw_rect(surf, &obj->area, &obj->coords, &bg_desc);
-        sgl_draw_fill_rect(surf, &obj->area, &knob_rect, obj->radius - obj->border, p_switch->knob_color, p_switch->alpha);
+        sgl_draw_fill_rect(surf, &obj->area, &knob_rect, radius, p_switch->knob_color, p_switch->alpha);
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         p_switch->status = !p_switch->status;
@@ -102,6 +105,7 @@ sgl_obj_t* sgl_switch_create(sgl_obj_t* parent)
     p_switch->status = false;
     p_switch->bg_color = SGL_THEME_BG_COLOR;
     p_switch->knob_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_BG_COLOR, 128);
+    p_switch->knob_radius = 255;
 
     sgl_obj_set_clickable(obj);
 

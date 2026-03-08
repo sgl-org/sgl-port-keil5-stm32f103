@@ -30,7 +30,7 @@ void tft_gpio_init(void)
 {
     GPIO_InitTypeDef gpioDef;
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+		GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
     gpioDef.GPIO_Mode = GPIO_Mode_Out_PP;
     gpioDef.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
     gpioDef.GPIO_Speed = GPIO_Speed_50MHz;
@@ -68,9 +68,9 @@ void SPI1_Init(void)
  
     SPI_Cmd(SPI1, ENABLE);    // 使能SPI外设
 
-	GPIO_WriteBit(GPIOA, GPIO_Pin_5, 1);
-	GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);
-	GPIO_WriteBit(GPIOA, GPIO_Pin_7, 1);
+		GPIO_WriteBit(GPIOA, GPIO_Pin_5, 1);
+		GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);
+		GPIO_WriteBit(GPIOA, GPIO_Pin_7, 1);
 }
 
 
@@ -104,26 +104,26 @@ void SPI1_Init_2(void)
  
     SPI_Cmd(SPI1, ENABLE);    // 使能SPI外设
 
-	GPIO_WriteBit(GPIOA, GPIO_Pin_5, 1);
-	GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);
-	GPIO_WriteBit(GPIOA, GPIO_Pin_7, 1);
+		GPIO_WriteBit(GPIOA, GPIO_Pin_5, 1);
+		GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);
+		GPIO_WriteBit(GPIOA, GPIO_Pin_7, 1);
 }
 
 
 void SPI1_WriteByte(uint16_t TxData)
 {                     
-	SPI_I2S_SendData(SPI1, TxData);                                 // 通过外设SPI1发送一个byte数据
-	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET); // 等待发送区空  
+		SPI_I2S_SendData(SPI1, TxData);                                 // 通过外设SPI1发送一个byte数据
+		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET); // 等待发送区空  
 }
 
 
 void SPI1_WriteMultByte(uint16_t *TxData, uint64_t len)
 {
-	while(len -- ){
+		while(len -- ){
     	SPI_I2S_SendData(SPI1, *TxData);                                 // 通过外设SPI1发送一个byte数据
-		TxData ++;
-		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET); // 等待发送区空  
-	}
+			TxData ++;
+			while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET); // 等待发送区空  
+		}
 }
 
 static void tft_delay(int delay_ms)
@@ -140,9 +140,9 @@ void tft_spi_write_byte(uint16_t data)
 	for(i = 0;i < 8;i++)
 	{
 		GPIO_WriteBit(SPI_SCK_PORT, SPI_SCK_PIN, 0); // 时钟线为高，开始时钟周期
-	#if 0
+		#if 0
         SPI_MOSI((Byte & 0x80) >> 7);
-	#else
+		#else
 		if(data & 0x80)
 		{
 			GPIO_WriteBit(SPI_MOSI_PORT, SPI_MOSI_PIN, 1);
@@ -151,8 +151,8 @@ void tft_spi_write_byte(uint16_t data)
 		{
 			GPIO_WriteBit(SPI_MOSI_PORT, SPI_MOSI_PIN, 0);
 		}
-	#endif
-        data <<= 1;
+		#endif
+    data <<= 1;
 		GPIO_WriteBit(SPI_SCK_PORT, SPI_SCK_PIN, 1); // 时钟线为高，开始时钟周期
 	}
 }
@@ -173,14 +173,14 @@ static void tft_set_win(u16 xStar, u16 yStar, u16 xEnd, u16 yEnd)
 {
     tft_write_cmd(0x002a);
     //tft_write_data((xStar >> 8) & 0xff);
-	tft_write_data(xStar & 0xffff);
+		tft_write_data(xStar & 0xffff);
    // tft_write_data((xEnd >> 8) & 0xff);
-	tft_write_data(xEnd & 0xffff);
+		tft_write_data(xEnd & 0xffff);
     tft_write_cmd(0x002b);
     //tft_write_data((yStar >> 8) & 0xff);
-	tft_write_data(yStar & 0xffff );
+		tft_write_data(yStar & 0xffff );
     //tft_write_data((yEnd >> 8) & 0xff);
-	tft_write_data(yEnd & 0xffff);
+		tft_write_data(yEnd & 0xffff);
     tft_write_cmd(0x002c); 
 }
 
@@ -189,87 +189,87 @@ void st7789_init(int rotation)
 {
     tft_write_cmd(0x11);
     tft_delay(10);
-	tft_write_cmd(0x3A);
-	tft_write_data(0x05);
-	tft_write_cmd(0xc5);
-	tft_write_data(0x1a);
-	tft_write_cmd(0x36); //rotation
-	if(rotation == 0) {
-		tft_write_data(0x00);
-	}
-	else if(rotation == 90) {
-		tft_write_data(0xc0);
-	}
-	else if(rotation == 180) {
-		tft_write_data(0x70);
-	}
-	else if(rotation == 270){
-		tft_write_data(0xa0);
-	}
+		tft_write_cmd(0x3A);
+		tft_write_data(0x05);
+		tft_write_cmd(0xc5);
+		tft_write_data(0x1a);
+		tft_write_cmd(0x36); //rotation
+		if(rotation == 0) {
+			tft_write_data(0x00);
+		}
+		else if(rotation == 90) {
+			tft_write_data(0xc0);
+		}
+		else if(rotation == 180) {
+			tft_write_data(0x70);
+		}
+		else if(rotation == 270){
+			tft_write_data(0xa0);
+		}
 
-//-------------ST7789V Frame rate setting-----------//
-	tft_write_cmd(0xb2);
-	tft_write_data(0x05);
-	tft_write_data(0x05);
-	tft_write_data(0x00);
-	tft_write_data(0x33);
-	tft_write_data(0x33);
-	tft_write_cmd(0xb7);
-	tft_write_data(0x35);
-//--------------ST7789V Power setting---------------//
-	tft_write_cmd(0xbb);
-	tft_write_data(0x3f);
-	tft_write_cmd(0xc0);
-	tft_write_data(0x2c);
-	tft_write_cmd(0xc2);
-	tft_write_data(0x01);
-	tft_write_cmd(0xc3);
-	tft_write_data(0x0f);
-	tft_write_cmd(0xc4);
-	tft_write_data(0x20);
-	tft_write_cmd(0xc6);
-	tft_write_data(0x11);
-	tft_write_cmd(0xd0);
-	tft_write_data(0xa4);
-	tft_write_data(0xa1);
-	tft_write_cmd(0xe8);
-	tft_write_data(0x03);
-	tft_write_cmd(0xe9);
-	tft_write_data(0x09);
-	tft_write_data(0x09);
-	tft_write_data(0x08);
-	tft_write_cmd(0xe0);
-	tft_write_data(0xd0);
-	tft_write_data(0x05);
-	tft_write_data(0x09);	
-	tft_write_data(0x09);
-	tft_write_data(0x08);
-	tft_write_data(0x14);	
-	tft_write_data(0x28);
-	tft_write_data(0x33);
-	tft_write_data(0x3f);
-	tft_write_data(0x07);
-	tft_write_data(0x13);
-	tft_write_data(0x14);
-	tft_write_data(0x28);
-	tft_write_data(0x30);	
-	tft_write_cmd(0xe1);
-	tft_write_data(0xd0);
-	tft_write_data(0x05);
-	tft_write_data(0x09);	
-	tft_write_data(0x09);
-	tft_write_data(0x08);
-	tft_write_data(0x03);	
-	tft_write_data(0x24);
-	tft_write_data(0x32);
-	tft_write_data(0x32);
-	tft_write_data(0x3b);
-	tft_write_data(0x14);
-	tft_write_data(0x13);
-	tft_write_data(0x28);
-	tft_write_data(0x2f);
-	tft_write_cmd(0x21);
-	tft_write_cmd(0x11);
+	//-------------ST7789V Frame rate setting-----------//
+		tft_write_cmd(0xb2);
+		tft_write_data(0x05);
+		tft_write_data(0x05);
+		tft_write_data(0x00);
+		tft_write_data(0x33);
+		tft_write_data(0x33);
+		tft_write_cmd(0xb7);
+		tft_write_data(0x35);
+	//--------------ST7789V Power setting---------------//
+		tft_write_cmd(0xbb);
+		tft_write_data(0x3f);
+		tft_write_cmd(0xc0);
+		tft_write_data(0x2c);
+		tft_write_cmd(0xc2);
+		tft_write_data(0x01);
+		tft_write_cmd(0xc3);
+		tft_write_data(0x0f);
+		tft_write_cmd(0xc4);
+		tft_write_data(0x20);
+		tft_write_cmd(0xc6);
+		tft_write_data(0x11);
+		tft_write_cmd(0xd0);
+		tft_write_data(0xa4);
+		tft_write_data(0xa1);
+		tft_write_cmd(0xe8);
+		tft_write_data(0x03);
+		tft_write_cmd(0xe9);
+		tft_write_data(0x09);
+		tft_write_data(0x09);
+		tft_write_data(0x08);
+		tft_write_cmd(0xe0);
+		tft_write_data(0xd0);
+		tft_write_data(0x05);
+		tft_write_data(0x09);	
+		tft_write_data(0x09);
+		tft_write_data(0x08);
+		tft_write_data(0x14);	
+		tft_write_data(0x28);
+		tft_write_data(0x33);
+		tft_write_data(0x3f);
+		tft_write_data(0x07);
+		tft_write_data(0x13);
+		tft_write_data(0x14);
+		tft_write_data(0x28);
+		tft_write_data(0x30);	
+		tft_write_cmd(0xe1);
+		tft_write_data(0xd0);
+		tft_write_data(0x05);
+		tft_write_data(0x09);	
+		tft_write_data(0x09);
+		tft_write_data(0x08);
+		tft_write_data(0x03);	
+		tft_write_data(0x24);
+		tft_write_data(0x32);
+		tft_write_data(0x32);
+		tft_write_data(0x3b);
+		tft_write_data(0x14);
+		tft_write_data(0x13);
+		tft_write_data(0x28);
+		tft_write_data(0x2f);
+		tft_write_cmd(0x21);
+		tft_write_cmd(0x11);
     tft_delay(120);      //Delay 120ms
     tft_write_cmd(0x29); 
 }
@@ -286,12 +286,12 @@ void tft_init(void)
     GPIO_WriteBit(SPI_RST_PORT, SPI_RST_PIN, 1);
     tft_delay(200000);
 
-	SPI1_Init();
+		SPI1_Init();
 
     st7789_init(0);
     tft_delay(20);
     tft_set_win(0, 0, 239, 239);
-	GPIO_WriteBit(SPI_DC_PORT, SPI_DC_PIN, 1); // 设置PA0为高电平
+		GPIO_WriteBit(SPI_DC_PORT, SPI_DC_PIN, 1); // 设置PA0为高电平
     for(int i=0;i<240*240;i++){
         SPI1_WriteByte(0xFF);
         SPI1_WriteByte(0xFF);
@@ -302,10 +302,10 @@ void tft_init(void)
 
 void demo_panel_flush_area(sgl_area_t *area, sgl_color_t *src)
 {
-	const int len = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1);
-  tft_set_win(area->x1, area->y1, area->x2, area->y2);
-	GPIO_WriteBit(SPI_DC_PORT, SPI_DC_PIN, 1); // 设置PA0为高电平
-	SPI1_WriteMultByte((uint16_t*)src, len);
-	
-	sgl_fbdev_flush_ready();
+		const int len = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1);
+		tft_set_win(area->x1, area->y1, area->x2, area->y2);
+		GPIO_WriteBit(SPI_DC_PORT, SPI_DC_PIN, 1); // 设置PA0为高电平
+		SPI1_WriteMultByte((uint16_t*)src, len);
+		
+		sgl_fbdev_flush_ready();
 }

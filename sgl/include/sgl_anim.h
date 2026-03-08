@@ -171,11 +171,18 @@ void sgl_anim_remove(sgl_anim_t *anim);
 /**
  * @brief start animation
  * @param  anim animation object
+ * @para  repeat_cnt repeat count of animation
  * @return none
 */
-static inline void sgl_anim_start(sgl_anim_t *anim)
+static inline void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt)
 {
-    sgl_anim_add(anim);
+    SGL_ASSERT(anim != NULL);
+    if (anim->finished && repeat_cnt) {
+        sgl_anim_add(anim);
+        anim->finished = 0;
+    }
+    anim->act_time = 0;
+    anim->repeat_cnt = repeat_cnt & SGL_ANIM_REPEAT_LOOP;
 }
 
 
@@ -186,13 +193,17 @@ static inline void sgl_anim_start(sgl_anim_t *anim)
 */
 static inline void sgl_anim_stop(sgl_anim_t *anim)
 {
-    sgl_anim_remove(anim);
+    SGL_ASSERT(anim != NULL);
+    if (!anim->finished) {
+        sgl_anim_remove(anim);
+        anim->finished = 1;
+    }
 }
 
 
 /**
  * @brief delete animation object
- * @param  anim animation object
+ * @param anim animation object
  * @return none
 */
 static inline void sgl_anim_delete(sgl_anim_t *anim)
@@ -282,24 +293,6 @@ static inline void sgl_anim_set_act_duration(sgl_anim_t *anim, uint32_t duration
 {
     SGL_ASSERT(anim != NULL);
     anim->act_duration = duration_ms;
-}
-
-
-/**
- * @brief set animation repeat count
- * @param  anim animation object
- * @param  repeat_cnt repeat count
- * @return none
- * @note the repeat count can be set to SGL_ANIM_REPEAT_LOOP or SGL_ANIM_REPEAT_ONCE
- *       - SGL_ANIM_REPEAT_ONCE: repeat once, it same as repeat count 1
- *       - SGL_ANIM_REPEAT_LOOP: repeat loop, it same as repeat count -1
- *       - otherwise: repeat count
- *       max value: 0x3FFFFFFE
- */
-static inline void sgl_anim_set_repeat_cnt(sgl_anim_t *anim, int32_t repeat_cnt)
-{
-    SGL_ASSERT(anim != NULL);
-    anim->repeat_cnt = ((uint32_t)repeat_cnt) & SGL_ANIM_REPEAT_LOOP;
 }
 
 

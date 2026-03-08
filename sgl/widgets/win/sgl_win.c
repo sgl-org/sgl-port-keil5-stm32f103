@@ -33,17 +33,14 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
     sgl_pos_t align_pos;
     int16_t close_cx, close_cy, close_r, title_h;
 
-    title_h = sgl_max3(obj->radius, win->title_h, sgl_font_get_height(win->title_font));
-    bg.y1 -= title_h;
+    win->title_h = sgl_max3(obj->radius, win->title_h, sgl_font_get_height(win->title_font));
+    title_h = win->title_h;
+    //bg.y1 -= title_h;
     title_bg.y1 = bg.y1;
     title_bg.y2 = title_bg.y1 + title_h;
     close_r  = title_h / 3;
     close_cx = obj->coords.x2 - close_r - obj->radius / 2;
     close_cy = title_bg.y1 + title_h / 2 + obj->border / 2;
-
-    if (obj->area.y1 == obj->coords.y1) {
-        obj->area.y1 -= title_h;
-    }
 
     if (evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_rect(surf, &obj->area, &bg, &win->bg);

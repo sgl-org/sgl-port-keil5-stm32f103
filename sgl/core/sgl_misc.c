@@ -143,7 +143,7 @@ void sgl_logo_anim(sgl_anim_t *anim, int32_t value)
 void sgl_boot_logo(void)
 {
     sgl_obj_t *logo = sgl_logo_create(NULL);
-    sgl_obj_set_size(logo, SGL_SCREEN_WIDTH / 2, SGL_SCREEN_HEIGHT / 2);
+    sgl_obj_set_size(logo, SGL_SCREEN_WIDTH / 3, SGL_SCREEN_HEIGHT / 3);
     sgl_obj_set_pos_align(logo, SGL_ALIGN_CENTER);
     sgl_obj_set_radius(logo, 0);
 
@@ -153,7 +153,7 @@ void sgl_boot_logo(void)
     sgl_anim_set_start_value(anim, SGL_ALPHA_MAX);
     sgl_anim_set_end_value(anim, SGL_ALPHA_MIN);
     sgl_anim_set_path(anim, sgl_logo_anim, SGL_ANIM_PATH_LINEAR);
-    sgl_anim_start(anim);
+    sgl_anim_start(anim, SGL_ANIM_REPEAT_ONCE);
 
     while (!sgl_anim_is_finished(anim)) {
         sgl_task_handle();

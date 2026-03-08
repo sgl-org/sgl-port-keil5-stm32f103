@@ -202,10 +202,9 @@ int main(void)
             sgl_anim_set_start_value(anim, 0);
             sgl_anim_set_end_value(anim, 240);
             sgl_anim_set_path(anim, demo_anim_path, SGL_ANIM_PATH_LINEAR);
-            sgl_anim_set_repeat_cnt(anim, 1);
             sgl_anim_set_finish_cb(anim, demo_anim_finish);
             sgl_anim_set_auto_free(anim);
-            sgl_anim_start(anim);
+            sgl_anim_start(anim, 1);
         }
     }
 }

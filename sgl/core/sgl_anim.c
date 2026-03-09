@@ -46,7 +46,7 @@ void sgl_anim_init(sgl_anim_t *anim)
 {
     anim->next = NULL;
     anim->data = NULL;
-		anim->act_delay  = 0;
+    anim->act_delay = 0;
     anim->act_duration = 0;
     anim->start_value = 0;
     anim->end_value = 0;
@@ -146,9 +146,8 @@ void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt)
         sgl_anim_add(anim);
         anim->finished = 0;
     }
-    if (!anim->act_delay) {
-        anim->act_delay = sgl_tick_get();
-    }
+
+    anim->act_delay = sgl_tick_get();
     anim->repeat_cnt = repeat_cnt & SGL_ANIM_REPEAT_LOOP;
 }
 
@@ -165,6 +164,7 @@ void sgl_anim_stop(sgl_anim_t *anim)
         sgl_anim_remove(anim);
         anim->finished = 1;
     }
+    anim->act_delay = 0;
 }
 
 

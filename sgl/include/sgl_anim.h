@@ -233,7 +233,7 @@ static inline void sgl_anim_set_end_value(sgl_anim_t *anim, int32_t value)
 static inline void sgl_anim_set_act_delay(sgl_anim_t *anim, uint32_t delay_ms)
 {
     SGL_ASSERT(anim != NULL);
-    anim->act_delay = sgl_tick_get() + delay_ms;
+    anim->act_delay = delay_ms;
 }
 
 
